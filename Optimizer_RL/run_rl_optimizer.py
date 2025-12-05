@@ -35,7 +35,7 @@ starting_portfolio_units = np.array([
 # ----------------------------------------
 # 3) Live FX USD→TND
 # ----------------------------------------
-API_KEY = "845d874cbaef527504bc022b66838e24"
+API_KEY = "*****************************"
 fx_df = get_usd_tnd_fixer(API_KEY)
 fx = float(fx_df["USD_TND"].iloc[0])
 
