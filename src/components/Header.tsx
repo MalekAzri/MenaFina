@@ -47,11 +47,12 @@ export default function Header() {
                                 </button>
                                 <div className="flex items-center space-x-3 pl-4 border-l border-gray-700">
                                     <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-600">
-                                        {session.user?.image ? (
-                                            <img src={session.user.image} alt="User" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-xs">User</div>
-                                        )}
+                                        <img 
+                                            src="/profile-picture.png" 
+                                            alt="User" 
+                                            className="w-full h-full object-cover"
+                                            key="profile-pic"
+                                        />
                                     </div>
                                     <button
                                         onClick={() => signOut({ callbackUrl: '/' })}

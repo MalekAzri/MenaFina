@@ -52,6 +52,7 @@ export default function ChatbotPage() {
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const hasInitialized = useRef(false);
 
     // State for the flow
     const [currentStep, setCurrentStep] = useState<ChatStep>('NAME');
@@ -85,12 +86,13 @@ export default function ChatbotPage() {
         scrollToBottom();
     }, [messages, isTyping]);
 
-    // Initial greeting
+    // Initial greeting - only show once when chat starts
     useEffect(() => {
-        if (messages.length === 0) {
-            addAiMessage("👋 Pour commencer, comment tu t'appelles ?");
+        if (messages.length === 0 && currentStep === 'NAME' && !hasInitialized.current) {
+            hasInitialized.current = true;
+            addAiMessage("👋 To get started, what's your name?");
         }
-    }, []);
+    }, [messages.length, currentStep]);
 
     const addAiMessage = (content: string) => {
         setIsTyping(true);
@@ -127,7 +129,7 @@ export default function ChatbotPage() {
         switch (currentStep) {
             case 'NAME':
                 setUserName(input);
-                addAiMessage(`🔷 Bienvenue sur FINA — Investment AI Advisor\nJe vais te poser une série de questions pour déterminer ton profil.\n\n📌 D'abord quelques infos générales\n\n${QUESTIONS.general[0].question} :`);
+                addAiMessage(`🔷 Welcome to FINA — Investment AI Advisor\nI'm going to ask you a series of questions to determine your profile.\n\n📌 First, some general information\n\n${QUESTIONS.general[0].question}:`);
                 setCurrentStep('GENERAL_INFO');
                 setGeneralInfoIndex(0);
                 break;
@@ -141,10 +143,10 @@ export default function ChatbotPage() {
                     // Next general question
                     const nextIndex = generalInfoIndex + 1;
                     setGeneralInfoIndex(nextIndex);
-                    addAiMessage(`${QUESTIONS.general[nextIndex].question} :`);
+                    addAiMessage(`${QUESTIONS.general[nextIndex].question}:`);
                 } else {
                     // Done with general info, move to Big Five
-                    addAiMessage(`\n🟣 Personality (Likert 1→5)\n${QUESTIONS.bigFive.Op[0]} (1-5) :`);
+                    addAiMessage(`\n🟣 Personality (Likert 1→5)\n${QUESTIONS.bigFive.Op[0]} (1-5):`);
                     setCurrentStep('BIG_FIVE');
                     setBigFiveCategory('Op');
                     setBigFiveIndex(0);
@@ -162,7 +164,7 @@ export default function ChatbotPage() {
                     // Next question in same category
                     const nextIdx = bigFiveIndex + 1;
                     setBigFiveIndex(nextIdx);
-                    addAiMessage(`${currentQuestions[nextIdx]} (1-5) :`);
+                    addAiMessage(`${currentQuestions[nextIdx]} (1-5):`);
                 } else {
                     // Move to next category or finish Big Five
                     const categories: ('Op' | 'Co' | 'Ex' | 'Ag' | 'Ne')[] = ['Op', 'Co', 'Ex', 'Ag', 'Ne'];
@@ -172,10 +174,10 @@ export default function ChatbotPage() {
                         const nextCat = categories[currentCatIdx + 1];
                         setBigFiveCategory(nextCat);
                         setBigFiveIndex(0);
-                        addAiMessage(`${QUESTIONS.bigFive[nextCat][0]} (1-5) :`);
+                        addAiMessage(`${QUESTIONS.bigFive[nextCat][0]} (1-5):`);
                     } else {
                         // Done with Big Five -> Behaviour
-                        addAiMessage(`\n💰 Finance & Risk behaviour (1-5)\n${QUESTIONS.behaviour.FI[0]} (1-5) :`);
+                        addAiMessage(`\n💰 Finance & Risk behavior (1-5)\n${QUESTIONS.behaviour.FI[0]} (1-5):`);
                         setCurrentStep('BEHAVIOUR');
                         setBehaviourCategory('FI');
                         setBehaviourIndex(0);
@@ -192,7 +194,7 @@ export default function ChatbotPage() {
                 if (behaviourIndex < bQuestions.length - 1) {
                     const nextBIdx = behaviourIndex + 1;
                     setBehaviourIndex(nextBIdx);
-                    addAiMessage(`${bQuestions[nextBIdx]} (1-5) :`);
+                    addAiMessage(`${bQuestions[nextBIdx]} (1-5):`);
                 } else {
                     const bCategories: ('FI' | 'RI' | 'FD')[] = ['FI', 'RI', 'FD'];
                     const currentBCatIdx = bCategories.indexOf(bCat);
@@ -201,25 +203,25 @@ export default function ChatbotPage() {
                         const nextBCat = bCategories[currentBCatIdx + 1];
                         setBehaviourCategory(nextBCat);
                         setBehaviourIndex(0);
-                        addAiMessage(`${QUESTIONS.behaviour[nextBCat][0]} (1-5) :`);
+                        addAiMessage(`${QUESTIONS.behaviour[nextBCat][0]} (1-5):`);
                     } else {
                         // Done with Behaviour -> Capital
                         setCurrentStep('CAPITAL');
-                        addAiMessage(`\n💵 Montant à investir (TND) :`);
+                        addAiMessage(`\n💵 Amount to invest (TND):`);
                     }
                 }
                 break;
 
             case 'CAPITAL':
                 setUserProfile((prev: any) => ({ ...prev, Capital: input }));
-                addAiMessage(`\n🎯 Profil détecté, laisse-moi t'expliquer brièvement…\n(Analyse factice en cours...)\n\nVotre profil est : AGGRESSIVE\nVous avez une forte tolérance au risque et cherchez des rendements élevés.`);
+                addAiMessage(`\n🎯 Profile detected, let me explain briefly…\n(Analysis in progress...)\n\nYour profile is: AGGRESSIVE\nYou have a high risk tolerance and seek high returns.`);
 
                 setTimeout(() => {
-                    addAiMessage(`\n📈 Je calcule maintenant un portefeuille équilibré pour toi…\n(Optimisation HRP...)`);
+                    addAiMessage(`\n📈 I'm now calculating a balanced portfolio for you…\n(HRP Optimization...)`);
                     setCurrentStep('HRP_Portfolio');
                     // Automatically proceed to RL prompt after a delay
                     setTimeout(() => {
-                        addAiMessage(`\n🔥 Si tu veux aller plus loin, je peux optimiser ton portefeuille à l'aide du Reinforcement Learning.\n🔥 Lancer optimisation RL ? (y/n):`);
+                        addAiMessage(`\n🔥 If you want to go further, I can optimize your portfolio using Reinforcement Learning.\n🔥 Launch RL optimization? (y/n):`);
                         setCurrentStep('RL_Intro');
                     }, 2000);
                 }, 1500);
@@ -227,18 +229,18 @@ export default function ChatbotPage() {
 
             case 'RL_Intro':
                 if (input.toLowerCase() === 'y') {
-                    addAiMessage(`(Lancement RL...)\n🚀 RL terminé\nOptimsation réussie. Le portefeuille a été réajusté pour maximiser le ratio de Sharpe.`);
+                    addAiMessage(`(Launching RL...)\n🚀 RL completed\nOptimization successful. The portfolio has been readjusted to maximize the Sharpe ratio.`);
                 } else {
-                    addAiMessage(`Entendu. Nous restons sur l'allocation classique (HRP).`);
+                    addAiMessage(`Understood. We'll stick with the classic allocation (HRP).`);
                 }
-                addAiMessage(`\n💾 C’est bon, tout est enregistré. Tu pourras revenir quand tu veux !\n\n🔁 Tu veux analyser un autre profil ou une autre somme ? (y/n) :`);
+                addAiMessage(`\n💾 All done, everything is saved. You can come back anytime!\n\n🔁 Do you want to analyze another profile or amount? (y/n):`);
                 setCurrentStep('DONE');
                 break;
 
             case 'DONE':
                 if (input.toLowerCase() === 'y') {
                     // Reset
-                    addAiMessage("Super ! Recommençons.");
+                    addAiMessage("Great! Let's start over.");
                     setUserName('');
                     setCurrentStep('NAME');
                     setGeneralInfoIndex(0);
@@ -247,12 +249,13 @@ export default function ChatbotPage() {
                     setBehaviourCategory('FI');
                     setBehaviourIndex(0);
                     setUserProfile({});
+                    hasInitialized.current = false;
                     setTimeout(() => {
-                        addAiMessage("👋 Pour commencer, comment tu t'appelles ?");
+                        addAiMessage("👋 To get started, what's your name?");
                     }, 1000);
 
                 } else {
-                    addAiMessage("\n🌟 Merci d'avoir discuté avec moi. J'espère t'avoir aidé ! À très bientôt 👋");
+                    addAiMessage("\n🌟 Thank you for chatting with me. I hope I helped you! See you soon 👋");
                 }
                 break;
         }
@@ -269,10 +272,16 @@ export default function ChatbotPage() {
         setMessages([]);
         setInputText('');
         setIsTyping(false);
+        setUserName('');
         setCurrentStep('NAME');
         setGeneralInfoIndex(0);
-        // Reset everything
-        addAiMessage("👋 Pour commencer, comment tu t'appelles ?");
+        setBigFiveCategory('Op');
+        setBigFiveIndex(0);
+        setBehaviourCategory('FI');
+        setBehaviourIndex(0);
+        setUserProfile({});
+        hasInitialized.current = false;
+        // Reset everything - the useEffect will handle the initial greeting
     };
 
     const handleQuickPrompt = (prompt: string) => {

@@ -17,7 +17,8 @@ import {
     FaRobot,
     FaUsers,
     FaBell,
-    FaGear
+    FaGear,
+    FaTrashCan
 } from 'react-icons/fa6';
 import Header from '@/components/Header';
 
@@ -57,7 +58,7 @@ function getTimeAgo(timestamp: number): string {
 
 export default function SimulatorPage() {
     const [companyName, setCompanyName] = useState('');
-    const [risk, setRisk] = useState(0.5);
+    const [decisionThreshold, setDecisionThreshold] = useState(0.5);
     const [result, setResult] = useState<AnalysisResult | null>(null);
 
     const [recentAnalyses, setRecentAnalyses] = useState<RecentAnalysis[]>([]);
@@ -81,7 +82,6 @@ export default function SimulatorPage() {
         } else {
             // Default mock data if no saved analyses
             const defaultAnalyses: RecentAnalysis[] = [
-                { id: '1', company: 'Apple Inc.', invest: true, time: '2 hours ago', timestamp: Date.now() - 7200000 },
                 { id: '2', company: 'GameStop Corp.', invest: false, time: '1 day ago', timestamp: Date.now() - 86400000 },
                 { id: '3', company: 'Microsoft Corp.', invest: true, time: '3 days ago', timestamp: Date.now() - 259200000 },
             ];
@@ -108,7 +108,6 @@ export default function SimulatorPage() {
         }
 
         const companies: Record<string, AnalysisResult> = {
-            'apple': { invest: true, analysis: 'Apple shows exceptional financial health with strong revenue growth, innovative product pipeline, and dominant market position in premium consumer electronics.', accuracy: 95, growth: 'High', risk: 'Low' },
             'microsoft': { invest: true, analysis: 'Microsoft demonstrates robust cloud growth, diversified revenue streams, and strong enterprise market presence with Azure and Office 365.', accuracy: 95, growth: 'High', risk: 'Low' },
             'tesla': { invest: true, analysis: 'Tesla leads electric vehicle innovation with expanding global production capacity and growing energy storage business.', accuracy: 95, growth: 'Very High', risk: 'High' },
             'gamestop': { invest: false, analysis: 'GameStop faces declining retail gaming market, high debt levels, and uncertain transformation strategy.', accuracy: 95, growth: 'Low', risk: 'High' },
@@ -183,6 +182,15 @@ export default function SimulatorPage() {
         }
     };
 
+    const deleteAnalysis = (id: string) => {
+        setRecentAnalyses(prev => {
+            const updated = prev.filter(item => item.id !== id);
+            // Update localStorage
+            localStorage.setItem('menafina_saved_analyses', JSON.stringify(updated));
+            return updated;
+        });
+    };
+
     return (
         <div className="min-h-screen bg-dark-primary text-white font-inter">
             {/* Header specifically for Simulator */}
@@ -221,7 +229,7 @@ export default function SimulatorPage() {
                                         value={companyName}
                                         onChange={(e) => setCompanyName(e.target.value)}
                                         onKeyPress={handleKeyPress}
-                                        placeholder="Enter company name (e.g., Apple, Microsoft, Tesla...)"
+                                        placeholder="Enter company name (e.g., Microsoft, Tesla, Netflix...)"
                                         className="w-full px-6 py-4 bg-dark-primary border border-dark-border rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none transition-all text-lg"
                                     />
                                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
@@ -231,23 +239,23 @@ export default function SimulatorPage() {
                             </div>
 
                             <div className="mb-8">
-                                <label htmlFor="riskLevel" className="block text-lg font-semibold text-white mb-3 flex justify-between">
-                                    <span>Risk Level</span>
-                                    <span className="text-purple-400 font-bold">{risk.toFixed(2)}</span>
+                                <label htmlFor="decisionThreshold" className="block text-lg font-semibold text-white mb-3 flex justify-between">
+                                    <span>Decision Threshold</span>
+                                    <span className="text-purple-400 font-bold">{decisionThreshold.toFixed(2)}</span>
                                 </label>
                                 <input
                                     type="range"
-                                    id="riskLevel"
+                                    id="decisionThreshold"
                                     min="0"
                                     max="1"
                                     step="0.01"
-                                    value={risk}
-                                    onChange={(e) => setRisk(parseFloat(e.target.value))}
+                                    value={decisionThreshold}
+                                    onChange={(e) => setDecisionThreshold(parseFloat(e.target.value))}
                                     className="w-full h-2 bg-dark-primary rounded-lg appearance-none cursor-pointer accent-purple-600"
                                 />
                                 <div className="flex justify-between text-xs text-gray-500 mt-2">
-                                    <span>Low Risk (Conservative)</span>
-                                    <span>High Risk (Aggressive)</span>
+                                    <span>Lenient (Lower Scoring Strictness)</span>
+                                    <span>Strict (Higher Scoring Strictness)</span>
                                 </div>
                             </div>
 
@@ -343,7 +351,16 @@ export default function SimulatorPage() {
                                                 </span>
                                             )}
                                         </div>
-                                        <span className="text-gray-400 text-sm">{item.time}</span>
+                                        <div className="flex items-center space-x-3">
+                                            <span className="text-gray-400 text-sm">{item.time}</span>
+                                            <button
+                                                onClick={() => deleteAnalysis(item.id)}
+                                                className="text-gray-400 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
+                                                title="Delete analysis"
+                                            >
+                                                <FaTrashCan className="text-sm" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))
                             )}

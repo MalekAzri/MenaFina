@@ -16,10 +16,11 @@ import {
     FaChevronRight,
     FaClock
 } from 'react-icons/fa6';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { getMeetings, getMeetingsForMonth, type Meeting } from '@/lib/meetings';
 
 export default function StudentAccount() {
+    const { data: session } = useSession();
     const [meetings, setMeetings] = useState<Meeting[]>([]);
     const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -237,8 +238,11 @@ export default function StudentAccount() {
                     <div className="bg-dark-secondary rounded-xl border border-dark-border p-6">
                         <div className="flex flex-col items-center mb-6">
                             <div className="w-32 h-32 rounded-full border-4 border-dark-border mb-4 overflow-hidden bg-gray-700">
-                                {/* Placeholder for avatar */}
-                                <div className="w-full h-full flex items-center justify-center text-4xl">👩‍🎓</div>
+                                {session?.user?.image ? (
+                                    <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <img src="/profile-picture.png" alt="Profile" className="w-full h-full object-cover" />
+                                )}
                             </div>
                             <h2 className="text-2xl font-bold text-white mb-1">Sarah Johnson</h2>
                             <p className="text-gray-400 text-sm mb-3">Student</p>

@@ -27,9 +27,7 @@ const handler = NextAuth({
                     id: user.id,
                     name: user.firstName, // Use firstName as the display name
                     email: user.email,
-                    image: user.role === 'professor'
-                        ? "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg"
-                        : "https://i.pravatar.cc/150?u=student",
+                    image: "/profile-picture.png", // Use local profile picture
                     role: user.role,
                 };
             }

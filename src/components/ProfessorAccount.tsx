@@ -214,7 +214,7 @@ export default function ProfessorAccount() {
                         <p className="text-gray-400">Manage your profile, courses, and scheduled meetings</p>
                     </div>
                     <div className="flex items-center space-x-3">
-                        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="Professor" className="w-12 h-12 rounded-full object-cover" />
+                        <img src={session?.user?.image || "/profile-picture.png"} alt="Professor" className="w-12 h-12 rounded-full object-cover" />
                         <div>
                             <div className="text-white font-medium">{session?.user?.name || 'Dr. Sarah Johnson'}</div>
                             <div className="text-sm text-gray-400">Financial Economics</div>
@@ -234,7 +234,7 @@ export default function ProfessorAccount() {
                         <div className="space-y-6">
                             <div className="text-center mb-6">
                                 <div className="relative inline-block">
-                                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="Profile" className="w-24 h-24 rounded-full object-cover mx-auto" />
+                                    <img src={session?.user?.image || "/profile-picture.png"} alt="Profile" className="w-24 h-24 rounded-full object-cover mx-auto" />
                                     <button className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors">
                                         <FaCamera className="text-sm" />
                                     </button>
