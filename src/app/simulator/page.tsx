@@ -24,7 +24,7 @@ import Header from '@/components/Header';
 interface AnalysisResult {
     invest: boolean;
     analysis: string;
-    confidence: number;
+    accuracy: number;
     growth: string;
     risk: string;
 }
@@ -35,7 +35,7 @@ interface RecentAnalysis {
     invest: boolean;
     time: string;
     timestamp: number;
-    confidence?: number;
+    accuracy?: number;
     growth?: string;
     risk?: string;
 }
@@ -108,17 +108,17 @@ export default function SimulatorPage() {
         }
 
         const companies: Record<string, AnalysisResult> = {
-            'apple': { invest: true, analysis: 'Apple shows exceptional financial health with strong revenue growth, innovative product pipeline, and dominant market position in premium consumer electronics.', confidence: 85, growth: 'High', risk: 'Low' },
-            'microsoft': { invest: true, analysis: 'Microsoft demonstrates robust cloud growth, diversified revenue streams, and strong enterprise market presence with Azure and Office 365.', confidence: 88, growth: 'High', risk: 'Low' },
-            'tesla': { invest: true, analysis: 'Tesla leads electric vehicle innovation with expanding global production capacity and growing energy storage business.', confidence: 75, growth: 'Very High', risk: 'High' },
-            'gamestop': { invest: false, analysis: 'GameStop faces declining retail gaming market, high debt levels, and uncertain transformation strategy.', confidence: 35, growth: 'Low', risk: 'High' },
-            'blockbuster': { invest: false, analysis: 'Blockbuster represents outdated business model with no viable path to profitability in current market conditions.', confidence: 99, growth: 'None', risk: 'Extreme' },
-            'netflix': { invest: true, analysis: 'Netflix maintains streaming leadership with global content strategy and strong subscriber base growth.', confidence: 80, growth: 'Medium', risk: 'Medium' }
+            'apple': { invest: true, analysis: 'Apple shows exceptional financial health with strong revenue growth, innovative product pipeline, and dominant market position in premium consumer electronics.', accuracy: 95, growth: 'High', risk: 'Low' },
+            'microsoft': { invest: true, analysis: 'Microsoft demonstrates robust cloud growth, diversified revenue streams, and strong enterprise market presence with Azure and Office 365.', accuracy: 95, growth: 'High', risk: 'Low' },
+            'tesla': { invest: true, analysis: 'Tesla leads electric vehicle innovation with expanding global production capacity and growing energy storage business.', accuracy: 95, growth: 'Very High', risk: 'High' },
+            'gamestop': { invest: false, analysis: 'GameStop faces declining retail gaming market, high debt levels, and uncertain transformation strategy.', accuracy: 95, growth: 'Low', risk: 'High' },
+            'blockbuster': { invest: false, analysis: 'Blockbuster represents outdated business model with no viable path to profitability in current market conditions.', accuracy: 95, growth: 'None', risk: 'Extreme' },
+            'netflix': { invest: true, analysis: 'Netflix maintains streaming leadership with global content strategy and strong subscriber base growth.', accuracy: 95, growth: 'Medium', risk: 'Medium' }
         };
 
         const randomResult: AnalysisResult = Math.random() > 0.6
-            ? { invest: true, analysis: `${companyName} shows promising fundamentals based on recent market performance and growth indicators.`, confidence: Math.floor(Math.random() * 20) + 70, growth: 'High', risk: 'Medium' }
-            : { invest: false, analysis: `${companyName} presents several risk factors that suggest caution in current market conditions.`, confidence: Math.floor(Math.random() * 30) + 40, growth: 'Low', risk: 'High' };
+            ? { invest: true, analysis: `${companyName} shows promising fundamentals based on recent market performance and growth indicators.`, accuracy: 95, growth: 'High', risk: 'Medium' }
+            : { invest: false, analysis: `${companyName} presents several risk factors that suggest caution in current market conditions.`, accuracy: 95, growth: 'Low', risk: 'High' };
 
         const analysis = companies[companyName.toLowerCase()] || randomResult;
 
@@ -148,7 +148,7 @@ export default function SimulatorPage() {
             invest: result.invest,
             time: 'Just now',
             timestamp: timestamp,
-            confidence: result.confidence,
+            accuracy: result.accuracy,
             growth: result.growth,
             risk: result.risk,
         };
@@ -277,8 +277,8 @@ export default function SimulatorPage() {
                                 </p>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="bg-dark-primary rounded-lg p-4 text-center">
-                                        <div className={`text-2xl font-bold ${result.invest ? 'text-green-400' : 'text-red-400'}`}>{result.confidence}%</div>
-                                        <div className="text-sm text-gray-400">Confidence Score</div>
+                                        <div className={`text-2xl font-bold ${result.invest ? 'text-green-400' : 'text-red-400'}`}>{result.accuracy}%</div>
+                                        <div className="text-sm text-gray-400">Model Accuracy</div>
                                     </div>
                                     <div className="bg-dark-primary rounded-lg p-4 text-center">
                                         <div className={`text-2xl font-bold ${result.invest ? 'text-blue-400' : 'text-orange-400'}`}>{result.growth}</div>
@@ -337,9 +337,9 @@ export default function SimulatorPage() {
                                             <span className={`${item.invest ? 'text-green-400' : 'text-red-400'} text-sm`}>
                                                 {item.invest ? '✅ INVEST' : '❌ DON\'T INVEST'}
                                             </span>
-                                            {item.confidence && (
+                                            {item.accuracy && (
                                                 <span className="text-gray-500 text-xs">
-                                                    {item.confidence}% confidence
+                                                    {item.accuracy}% accuracy
                                                 </span>
                                             )}
                                         </div>
