@@ -1,5 +1,5 @@
-from config import PROFILE_CONFIG
-from universe import TICKERS
+from .config import PROFILE_CONFIG
+from .universe import TICKERS
 import pandas as pd
 
 # === Construction d'un mapping ticker → catégorie d'actif ===

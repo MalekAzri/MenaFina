@@ -1,9 +1,13 @@
-from generator import generate_portfolio
-from allocator import apply_constraints
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from Optimizer.generator import generate_portfolio
+from Optimizer.allocator import apply_constraints
 import pandas as pd
 
+
+
 # ========= Paramètre capital utilisateur (en dinar tunisien) ==========
-capital = 10000  # ➤ tu peux remplacer par input() plus tard
+  # ➤ tu peux remplacer par input() plus tard
 
 # ========= Conversion devise ==========
 import requests
@@ -29,7 +33,7 @@ def allocate_amount(weights, capital_usd):
     return weights * capital_usd
 
 
-def run_from_profile(profile="balanced", mode="hrp"):
+def run_from_profile(profile="balanced", mode="hrp", capital=10000):
 
     # 1) Génération du portefeuille (poids)
     weights = generate_portfolio(profile=profile, mode=mode)

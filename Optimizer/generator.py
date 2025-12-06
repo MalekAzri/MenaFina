@@ -1,9 +1,12 @@
-from strategies import optimize_portfolio
-from allocator import apply_constraints
-from universe import TICKERS
-from data import load_returns
+from Optimizer.strategies import optimize_portfolio
+from Optimizer.allocator import apply_constraints
+from Optimizer.universe import TICKERS
+from Optimizer.data import load_returns
 import pandas as pd
 import numpy as np
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 
 np.random.seed(42)  # <--- stabilisation HRP
 

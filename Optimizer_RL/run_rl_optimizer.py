@@ -1,96 +1,89 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import numpy as np
-import pandas as pd
 import yfinance as yf
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
-from Optimizer_RL.universe import get_all_tickers
+from fixer_api import get_usd_tnd_fixer
+from universe import get_all_tickers
 from env_market import MarketEnv
-from utils.fixer_api import get_usd_tnd_fixer
 from Optimizer.bridge_profile import run_from_profile
 from Optimizer.generator import generate_portfolio
 
-# ----------------------------------------
-# 1) Profil utilisateur → portefeuille initial
-# ----------------------------------------
-profile ="balanced"
-mode ="hrp"
 
-profil = run_from_profile(profile)      
-initial_alloc = generate_portfolio(profil,mode) 
+# ========================= CONFIG ========================= #
 
-# ----------------------------------------
-# 2) Market Data
-# ----------------------------------------
+profile = "conservative"   # <<< choix utilisateur: cautious / balanced / aggressive
+profil = run_from_profile(profile)
+
+# Allocation initiale depuis optimizer classique (dictionnaire)
+initial_alloc_dict = generate_portfolio(profile, "hrp")  # format dict {"SHY":0.2,...}
+
+# FX live
+fx = float(get_usd_tnd_fixer("845d874cbaef527504bc022b66838e24")["USD_TND"].iloc[0])
+
+# Univers boursier RL
 tickers = get_all_tickers()
-prices = yf.download(tickers, start="2016-01-01")["Close"].dropna()
-prices_init = prices.iloc[0]
+prices = yf.download(tickers, start="2018-01-01")["Close"].dropna()
 
-initial_capital = 10000  
-starting_portfolio_units = np.array([ 
-    (initial_alloc.get(t,0)*initial_capital) / prices_init[t]  
-    for t in tickers
+
+# ---- Convertir allocation classique → même dimension que RL (52 tickers) ---- #
+def expand_alloc_to_rl_space(alloc_dict, tickers):
+    alloc = [alloc_dict.get(t, 0) for t in tickers]     # 0 si ticker manquant
+    alloc = np.array(alloc, dtype=float)
+    alloc = alloc / (alloc.sum()+1e-9)                  # normalisation
+    return alloc
+
+initial_alloc = expand_alloc_to_rl_space(initial_alloc_dict, tickers)
+print(f"\n🟢 Allocation initiale adaptée au RL : {len(initial_alloc)} tickers\n")
+
+
+# ========================= ENVIRONNEMENT ========================= #
+
+env_raw = DummyVecEnv([
+    lambda: MarketEnv(
+    prices,
+    fx,
+    initial_alloc,
+    profile
+)
 ])
 
-# ----------------------------------------
-# 3) Live FX USD→TND
-# ----------------------------------------
-API_KEY = "*****************************"
-fx_df = get_usd_tnd_fixer(API_KEY)
-fx = float(fx_df["USD_TND"].iloc[0])
-
-print(f"✔ USD→TND = {fx}")
-
-# ----------------------------------------
-# 4) RL Environment
-# ----------------------------------------
-env_raw = DummyVecEnv([lambda: MarketEnv(prices, fx, starting_portfolio_units)])
-
-# Charge normalization utilisée durant training
+# Charger normalisation entraînée
 env = VecNormalize.load("models/vecnorm.pkl", env_raw)
+env.training = False
+env.norm_reward = False
 
-# ----------------------------------------
-# 5) Load Trained Model
-# ----------------------------------------
-model = PPO.load("models/ppo_tnd.zip")
 
-# ----------------------------------------
-# 6) Run RL Simulation
-# ----------------------------------------
-obs,_ = env.reset()
-done=False
-value=[]
+# ========================= CHARGEMENT MODEL ========================= #
+
+model = PPO.load("models/ppo_rl_multi_profile_cycled.zip", env=env)
+
+
+# ========================= RUN OPTIMIZER RL ========================= #
+
+obs= env.reset()
+done = False
 
 while not done:
     action,_ = model.predict(obs, deterministic=True)
-    obs, reward, terminated, truncated, info = env.step(action)
-    done = terminated or truncated
+    obs, reward,done, info = env.step(action)
 
-    info_single = info[0] if isinstance(info, list) else info
-    v_tnd = info_single["value_usd"] * fx
-    value.append(v_tnd)
-
-# ---------- AFFICHAGE DU PORTFOLIO -------------------
 final_prices = prices.iloc[env.envs[0].current_step].values
-final_units = env.envs[0].portfolio
-final_values_usd = final_units * final_prices
+units = env.envs[0].portfolio
+values = units * final_prices
 
-total_usd = final_values_usd.sum() + env.envs[0].cash
-total_tnd = total_usd * fx
+total = values.sum() + env.envs[0].cash
+total_tnd = total * fx
 
-print("\n📌 Portefeuille final optimisé (RL)\n")
 
-for i,asset in enumerate(tickers):
-    units = final_units[i]
-    if units>0.00001:
-        val_usd = final_values_usd[i]
-        val_tnd = val_usd * fx
-        weight = (val_usd/total_usd)*100
-        print(f"{asset:<10} : {units:8.4f} unités | {val_tnd:10.2f} TND | {weight:5.1f}%")
+# ========================= RESULTAT ========================= #
 
-if env.envs[0].cash > 0:
-    cash_tnd = env.envs[0].cash * fx
-    weight_cash = (env.envs[0].cash/total_usd)*100
-    print(f"Cash       :          ---       | {cash_tnd:10.2f} TND | {weight_cash:5.1f}%")
+print("\n📌 Portefeuille RL Optimisé\n")
+for i,ticker in enumerate(tickers):
+    if units[i] > 0.0001:
+        print(f"{ticker:<10} {units[i]:.4f} u | {values[i]*fx:,.1f} TND")
 
-print(f"\n💰 Valeur totale finale = {total_tnd:,.2f} TND")
+print(f"\n💰 Valeur Finale = {total_tnd:,.2f} TND\n")

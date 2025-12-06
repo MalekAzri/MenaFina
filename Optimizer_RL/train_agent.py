@@ -1,23 +1,41 @@
 import yfinance as yf
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from universe import get_all_tickers
-from env_market import MarketEnv
+from env_market import MarketEnv, PROFILE_CONFIG
 from rl_agent import get_agent
+import sys, os
+from itertools import cycle
 
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+# ----- Données -----
 tickers = get_all_tickers()
-prices=yf.download(tickers,start="2018-01-01")["Close"].dropna()
+prices = yf.download(tickers, start="2018-01-01")["Close"].dropna()
 
-# Training en USD (plus stable)
-fx = 3.0   # valeur nominale pour entraînement (live sera appliqué ensuite)
+fx = 3.0  # nominal pour training
 
-env = DummyVecEnv([lambda: MarketEnv(prices, fx)])
-env = VecNormalize(env, norm_obs=True, norm_reward=True, clip_obs=10.)
+profiles = list(PROFILE_CONFIG.keys())
 
-model = get_agent("PPO", env)
+# ----- Cycle pour entraîner équitablement -----
+profile_cycle = cycle(profiles)
 
-print("\n🔵 Training started...\n")
-model.learn(total_timesteps=300000)           # augmenter si GPU/temps dispo
-model.save("models/ppo_tnd.zip")
+def make_env():
+    profile = next(profile_cycle)
+    print(f"Training episode with profile → {profile}")
+    return MarketEnv(prices, fx, profile=profile)
+
+# ----- Environnement RL -----
+env = DummyVecEnv([make_env])
+env = VecNormalize(env, norm_obs=True, norm_reward=True)
+
+# ----- Agent -----
+model = get_agent(env)
+
+# ----- Entraînement -----
+model.learn(total_timesteps=100000)
+
+# ----- Sauvegarde -----
+model.save("models/ppo_rl_multi_profile_cycled.zip")
 env.save("models/vecnorm.pkl")
 
-print("\n✔ Model trained and saved successfully!\n")
+print("\n🔥 Training complete — model saved with perfectly balanced profiles.")

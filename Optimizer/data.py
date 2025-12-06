@@ -1,7 +1,8 @@
 import yfinance as yf
 import pandas as pd
-from universe import get_all_tickers
-
+from Optimizer.universe import get_all_tickers
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 ALL_TICKERS = get_all_tickers()
 
 def load_returns():

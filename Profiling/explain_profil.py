@@ -1,11 +1,13 @@
 # =====================================
 # explain_profil.py
 # =====================================
-
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import joblib
 import shap
 import pandas as pd
-from generate_ai_explanation import generate_fina_explanation
+from Profiling.generate_ai_explanation import generate_fina_explanation
+
 
 # -------------------------------
 # Charger modèle + scaler + colonnes
