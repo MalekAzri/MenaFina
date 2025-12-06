@@ -57,7 +57,9 @@ function getTimeAgo(timestamp: number): string {
 
 export default function SimulatorPage() {
     const [companyName, setCompanyName] = useState('');
+    const [risk, setRisk] = useState(0.5);
     const [result, setResult] = useState<AnalysisResult | null>(null);
+
     const [recentAnalyses, setRecentAnalyses] = useState<RecentAnalysis[]>([]);
     const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
@@ -156,10 +158,10 @@ export default function SimulatorPage() {
             // Check if this company was already analyzed recently
             const filtered = prev.filter(item => item.company.toLowerCase() !== companyName.toLowerCase());
             const updated = [newAnalysis, ...filtered].slice(0, 10); // Keep max 10 analyses
-            
+
             // Save to localStorage
             localStorage.setItem('menafina_saved_analyses', JSON.stringify(updated));
-            
+
             return updated;
         });
 
@@ -228,6 +230,27 @@ export default function SimulatorPage() {
                                 </div>
                             </div>
 
+                            <div className="mb-8">
+                                <label htmlFor="riskLevel" className="block text-lg font-semibold text-white mb-3 flex justify-between">
+                                    <span>Risk Level</span>
+                                    <span className="text-purple-400 font-bold">{risk.toFixed(2)}</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    id="riskLevel"
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                    value={risk}
+                                    onChange={(e) => setRisk(parseFloat(e.target.value))}
+                                    className="w-full h-2 bg-dark-primary rounded-lg appearance-none cursor-pointer accent-purple-600"
+                                />
+                                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                                    <span>Low Risk (Conservative)</span>
+                                    <span>High Risk (Aggressive)</span>
+                                </div>
+                            </div>
+
                             <button
                                 onClick={analyzeCompany}
                                 className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center cursor-pointer"
@@ -292,7 +315,7 @@ export default function SimulatorPage() {
                             <FaClockRotateLeft className="mr-3 text-blue-400" />
                             Recent Analyses
                         </h3>
-                        
+
                         {savedMessage && (
                             <div className="mb-4 bg-green-500/10 border border-green-500/50 rounded-lg p-3 flex items-center space-x-2">
                                 <FaCheck className="text-green-400" />
