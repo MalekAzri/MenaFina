@@ -1,33 +1,23 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
+
 import {
-    FaGraduationCap,
-    FaTableCellsLarge,
     FaCircleUser,
-    FaRightFromBracket,
     FaPlus,
     FaMagnifyingGlass,
     FaTrashCan,
     FaRobot,
     FaEllipsisVertical,
-    FaLightbulb,
-    FaChartLine,
-    FaShieldHalved,
-    FaBook,
     FaPaperclip,
     FaFaceSmile,
     FaPaperPlane,
-    FaCheck,
     FaCopy,
     FaThumbsUp,
     FaThumbsDown,
-    FaUsers,
-    FaBell,
-    FaGear
 } from 'react-icons/fa6';
 import Header from '@/components/Header';
+import { QUESTIONS } from './questions';
 
 interface Message {
     id: string;
@@ -44,12 +34,40 @@ interface ChatHistory {
     time: string;
 }
 
+type ChatStep =
+    | 'NAME'
+    | 'GENERAL_INFO'
+    | 'BIG_FIVE'
+    | 'BEHAVIOUR'
+    | 'CAPITAL'
+    | 'Result_Analysis'
+    | 'HRP_Portfolio'
+    | 'RL_Intro'
+    | 'RL_Confirm'
+    | 'DONE';
+
 export default function ChatbotPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+
+    // State for the flow
+    const [currentStep, setCurrentStep] = useState<ChatStep>('NAME');
+    const [userName, setUserName] = useState('');
+
+    // Trackers for sub-steps
+    const [generalInfoIndex, setGeneralInfoIndex] = useState(0);
+
+    const [bigFiveCategory, setBigFiveCategory] = useState<'Op' | 'Co' | 'Ex' | 'Ag' | 'Ne'>('Op');
+    const [bigFiveIndex, setBigFiveIndex] = useState(0);
+
+    const [behaviourCategory, setBehaviourCategory] = useState<'FI' | 'RI' | 'FD'>('FI');
+    const [behaviourIndex, setBehaviourIndex] = useState(0);
+
+    // Collected Data
+    const [userProfile, setUserProfile] = useState<any>({});
 
     const [chatHistory, setChatHistory] = useState<ChatHistory[]>([
         { id: '1', title: 'Investment Strategies', preview: 'What are the best investment strategies for beginners?', time: '2m ago' },
@@ -67,6 +85,27 @@ export default function ChatbotPage() {
         scrollToBottom();
     }, [messages, isTyping]);
 
+    // Initial greeting
+    useEffect(() => {
+        if (messages.length === 0) {
+            addAiMessage("👋 Pour commencer, comment tu t'appelles ?");
+        }
+    }, []);
+
+    const addAiMessage = (content: string) => {
+        setIsTyping(true);
+        setTimeout(() => {
+            const aiResponse: Message = {
+                id: Date.now().toString(),
+                sender: 'ai',
+                content,
+                timestamp: 'Just now'
+            };
+            setMessages(prev => [...prev, aiResponse]);
+            setIsTyping(false);
+        }, 1000);
+    };
+
     const handleSendMessage = async () => {
         if (!inputText.trim()) return;
 
@@ -79,35 +118,143 @@ export default function ChatbotPage() {
 
         setMessages(prev => [...prev, userMessage]);
         setInputText('');
-        setIsTyping(true);
 
-        // Simulate AI delay and response
-        setTimeout(() => {
-            const aiResponse: Message = {
-                id: (Date.now() + 1).toString(),
-                sender: 'ai',
-                content: generateAIResponse(userMessage.content),
-                timestamp: 'Just now'
-            };
-            setMessages(prev => [...prev, aiResponse]);
-            setIsTyping(false);
-        }, 2000);
+        // Process the input based on current step
+        processInput(inputText.trim());
     };
 
-    const generateAIResponse = (input: string): string => {
-        const lowerInput = input.toLowerCase();
-        if (lowerInput.includes('invest') || lowerInput.includes('strategy')) {
-            return `Great question! Here are some fundamental investment strategies for beginners:
-            • **Diversification:** Spread your investments across different asset classes to reduce risk.
-            • **Dollar-Cost Averaging:** Invest a fixed amount regularly regardless of market conditions.
-            • **Long-Term Focus:** Invest with a long-term perspective to ride out market volatility.
-            • **Index Funds:** Consider low-cost index funds for broad market exposure.`;
-        } else if (lowerInput.includes('risk')) {
-            return `Risk management is crucial in investing. It involves identifying potential risks and taking steps to mitigate them. Key concepts include diversification, asset allocation, and understanding your own risk tolerance. never invest money you cannot afford to lose.`;
-        } else if (lowerInput.includes('market')) {
-            return `The market is driven by supply and demand. When more people want to buy a stock (demand), the price goes up. When more people want to sell (supply), the price goes down. Many factors influence this, including company performance, economic indicators, and investor sentiment.`;
-        } else {
-            return `I understand you're asking about "${input}". As an AI financial assistant, can you provide more specific details so I can give you the best advice? I can help with investment strategies, market analysis, risk assessment, and financial basics.`;
+    const processInput = (input: string) => {
+        switch (currentStep) {
+            case 'NAME':
+                setUserName(input);
+                addAiMessage(`🔷 Bienvenue sur FINA — Investment AI Advisor\nJe vais te poser une série de questions pour déterminer ton profil.\n\n📌 D'abord quelques infos générales\n\n${QUESTIONS.general[0].question} :`);
+                setCurrentStep('GENERAL_INFO');
+                setGeneralInfoIndex(0);
+                break;
+
+            case 'GENERAL_INFO':
+                // Save current answer
+                const currentKey = QUESTIONS.general[generalInfoIndex].key;
+                setUserProfile((prev: any) => ({ ...prev, [currentKey]: input }));
+
+                if (generalInfoIndex < QUESTIONS.general.length - 1) {
+                    // Next general question
+                    const nextIndex = generalInfoIndex + 1;
+                    setGeneralInfoIndex(nextIndex);
+                    addAiMessage(`${QUESTIONS.general[nextIndex].question} :`);
+                } else {
+                    // Done with general info, move to Big Five
+                    addAiMessage(`\n🟣 Personality (Likert 1→5)\n${QUESTIONS.bigFive.Op[0]} (1-5) :`);
+                    setCurrentStep('BIG_FIVE');
+                    setBigFiveCategory('Op');
+                    setBigFiveIndex(0);
+                }
+                break;
+
+            case 'BIG_FIVE':
+                // Save current Big Five answer
+                const cat = bigFiveCategory;
+                const qKey = `${cat}${bigFiveIndex + 1}`;
+                setUserProfile((prev: any) => ({ ...prev, [qKey]: input }));
+
+                const currentQuestions = QUESTIONS.bigFive[cat];
+                if (bigFiveIndex < currentQuestions.length - 1) {
+                    // Next question in same category
+                    const nextIdx = bigFiveIndex + 1;
+                    setBigFiveIndex(nextIdx);
+                    addAiMessage(`${currentQuestions[nextIdx]} (1-5) :`);
+                } else {
+                    // Move to next category or finish Big Five
+                    const categories: ('Op' | 'Co' | 'Ex' | 'Ag' | 'Ne')[] = ['Op', 'Co', 'Ex', 'Ag', 'Ne'];
+                    const currentCatIdx = categories.indexOf(cat);
+
+                    if (currentCatIdx < categories.length - 1) {
+                        const nextCat = categories[currentCatIdx + 1];
+                        setBigFiveCategory(nextCat);
+                        setBigFiveIndex(0);
+                        addAiMessage(`${QUESTIONS.bigFive[nextCat][0]} (1-5) :`);
+                    } else {
+                        // Done with Big Five -> Behaviour
+                        addAiMessage(`\n💰 Finance & Risk behaviour (1-5)\n${QUESTIONS.behaviour.FI[0]} (1-5) :`);
+                        setCurrentStep('BEHAVIOUR');
+                        setBehaviourCategory('FI');
+                        setBehaviourIndex(0);
+                    }
+                }
+                break;
+
+            case 'BEHAVIOUR':
+                const bCat = behaviourCategory;
+                const bKey = `${bCat}${behaviourIndex + 1}`;
+                setUserProfile((prev: any) => ({ ...prev, [bKey]: input }));
+
+                const bQuestions = QUESTIONS.behaviour[bCat];
+                if (behaviourIndex < bQuestions.length - 1) {
+                    const nextBIdx = behaviourIndex + 1;
+                    setBehaviourIndex(nextBIdx);
+                    addAiMessage(`${bQuestions[nextBIdx]} (1-5) :`);
+                } else {
+                    const bCategories: ('FI' | 'RI' | 'FD')[] = ['FI', 'RI', 'FD'];
+                    const currentBCatIdx = bCategories.indexOf(bCat);
+
+                    if (currentBCatIdx < bCategories.length - 1) {
+                        const nextBCat = bCategories[currentBCatIdx + 1];
+                        setBehaviourCategory(nextBCat);
+                        setBehaviourIndex(0);
+                        addAiMessage(`${QUESTIONS.behaviour[nextBCat][0]} (1-5) :`);
+                    } else {
+                        // Done with Behaviour -> Capital
+                        setCurrentStep('CAPITAL');
+                        addAiMessage(`\n💵 Montant à investir (TND) :`);
+                    }
+                }
+                break;
+
+            case 'CAPITAL':
+                setUserProfile((prev: any) => ({ ...prev, Capital: input }));
+                addAiMessage(`\n🎯 Profil détecté, laisse-moi t'expliquer brièvement…\n(Analyse factice en cours...)\n\nVotre profil est : AGGRESSIVE\nVous avez une forte tolérance au risque et cherchez des rendements élevés.`);
+
+                setTimeout(() => {
+                    addAiMessage(`\n📈 Je calcule maintenant un portefeuille équilibré pour toi…\n(Optimisation HRP...)`);
+                    setCurrentStep('HRP_Portfolio');
+                    // Automatically proceed to RL prompt after a delay
+                    setTimeout(() => {
+                        addAiMessage(`\n🔥 Si tu veux aller plus loin, je peux optimiser ton portefeuille à l'aide du Reinforcement Learning.\n🔥 Lancer optimisation RL ? (y/n):`);
+                        setCurrentStep('RL_Intro');
+                    }, 2000);
+                }, 1500);
+                break;
+
+            case 'RL_Intro':
+                if (input.toLowerCase() === 'y') {
+                    addAiMessage(`(Lancement RL...)\n🚀 RL terminé\nOptimsation réussie. Le portefeuille a été réajusté pour maximiser le ratio de Sharpe.`);
+                } else {
+                    addAiMessage(`Entendu. Nous restons sur l'allocation classique (HRP).`);
+                }
+                addAiMessage(`\n💾 C’est bon, tout est enregistré. Tu pourras revenir quand tu veux !\n\n🔁 Tu veux analyser un autre profil ou une autre somme ? (y/n) :`);
+                setCurrentStep('DONE');
+                break;
+
+            case 'DONE':
+                if (input.toLowerCase() === 'y') {
+                    // Reset
+                    addAiMessage("Super ! Recommençons.");
+                    setUserName('');
+                    setCurrentStep('NAME');
+                    setGeneralInfoIndex(0);
+                    setBigFiveCategory('Op');
+                    setBigFiveIndex(0);
+                    setBehaviourCategory('FI');
+                    setBehaviourIndex(0);
+                    setUserProfile({});
+                    setTimeout(() => {
+                        addAiMessage("👋 Pour commencer, comment tu t'appelles ?");
+                    }, 1000);
+
+                } else {
+                    addAiMessage("\n🌟 Merci d'avoir discuté avec moi. J'espère t'avoir aidé ! À très bientôt 👋");
+                }
+                break;
         }
     };
 
@@ -122,12 +269,14 @@ export default function ChatbotPage() {
         setMessages([]);
         setInputText('');
         setIsTyping(false);
+        setCurrentStep('NAME');
+        setGeneralInfoIndex(0);
+        // Reset everything
+        addAiMessage("👋 Pour commencer, comment tu t'appelles ?");
     };
 
     const handleQuickPrompt = (prompt: string) => {
         setInputText(prompt);
-        // Optional: auto-send
-        // handleSendMessage(); 
     };
 
     return (
@@ -197,41 +346,6 @@ export default function ChatbotPage() {
                     </div>
 
                     <div id="messages-container" className="flex-1 overflow-y-auto p-6 space-y-6">
-                        {/* Welcome Screen if no messages */}
-                        {messages.length === 0 && (
-                            <div className="flex justify-center h-full items-center">
-                                <div className="max-w-2xl text-center">
-                                    <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <FaRobot className="text-white text-3xl" />
-                                    </div>
-                                    <h3 className="text-2xl font-bold text-white mb-4">Welcome to MenaFina AI</h3>
-                                    <p className="text-gray-400 mb-8">I'm your intelligent financial assistant. Ask me anything about investments, markets, risk management, or financial strategies.</p>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <button onClick={() => handleQuickPrompt("What are the best investment strategies for beginners?")} className="bg-dark-secondary border border-dark-border hover:border-blue-500 rounded-lg p-4 text-left transition-all duration-300 group">
-                                            <FaLightbulb className="text-blue-400 mb-2 text-xl" />
-                                            <p className="text-white font-medium mb-1">Investment Tips</p>
-                                            <p className="text-gray-500 text-sm">Get personalized advice</p>
-                                        </button>
-                                        <button onClick={() => handleQuickPrompt("Analyze current market trends")} className="bg-dark-secondary border border-dark-border hover:border-purple-500 rounded-lg p-4 text-left transition-all duration-300 group">
-                                            <FaChartLine className="text-purple-400 mb-2 text-xl" />
-                                            <p className="text-white font-medium mb-1">Market Analysis</p>
-                                            <p className="text-gray-500 text-sm">Understand trends</p>
-                                        </button>
-                                        <button onClick={() => handleQuickPrompt("How do I assess investment risks?")} className="bg-dark-secondary border border-dark-border hover:border-green-500 rounded-lg p-4 text-left transition-all duration-300 group">
-                                            <FaShieldHalved className="text-green-400 mb-2 text-xl" />
-                                            <p className="text-white font-medium mb-1">Risk Assessment</p>
-                                            <p className="text-gray-500 text-sm">Evaluate your portfolio</p>
-                                        </button>
-                                        <button onClick={() => handleQuickPrompt("Explain financial basics")} className="bg-dark-secondary border border-dark-border hover:border-orange-500 rounded-lg p-4 text-left transition-all duration-300 group">
-                                            <FaBook className="text-orange-400 mb-2 text-xl" />
-                                            <p className="text-white font-medium mb-1">Learn Basics</p>
-                                            <p className="text-gray-500 text-sm">Financial education</p>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                         {/* Messages */}
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -303,9 +417,7 @@ export default function ChatbotPage() {
                                         className="w-full bg-dark-primary border border-dark-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none max-h-32"
                                         style={{ height: 'auto', minHeight: '44px' }}
                                     ></textarea>
-                                    <button className="absolute right-3 bottom-3 text-gray-500 hover:text-white transition-colors">
-                                        <FaFaceSmile />
-                                    </button>
+                                    {/* Quick Replies / Suggestions could go here if context sensitive */}
                                 </div>
                                 <button
                                     onClick={handleSendMessage}
