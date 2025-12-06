@@ -19,6 +19,8 @@
 | **MenaFina-Bot** | AI Backend + Chatbot + Optimizer | Python | `chat_botFINA.py`, HRP, RL, Profiling, Optimizer |
 | **MenaFina-Web** | User Interface | TypeScript / React / Tailwind CSS | `src/`, `public/`, `auth/`, `pages/` (UI components) |
 | **MenaFina-Investment-Model** | ML Models & Investment Simulator | Python + scikit-learn | `predict.py`, `model.ipynb`, `data/` |
+| **MenaFina-Main** | Main repo: Next.js frontend, integrating backend later with FastAPI, NestJS, and Supabase | TypeScript / React / Tailwind + Python | for now: readme file and technical report |
+
 
 > The final application will integrate these 3 blocks via **FastAPI + NestJS APIs**.
 
