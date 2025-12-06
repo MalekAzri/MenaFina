@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     FaPenToSquare,
     FaCircle,
@@ -31,43 +31,43 @@ export default function StudentAccount() {
             const allMeetings = getMeetings();
             setMeetings(allMeetings);
         };
-        
+
         loadMeetings();
-        
+
         // Set up listener for storage changes (in case meetings are added from another tab)
         const handleStorageChange = () => {
             loadMeetings();
         };
-        
+
         // Listen for custom event when meeting is added
         const handleMeetingAdded = () => {
             loadMeetings();
         };
-        
+
         // Listen for custom event when meeting is removed
         const handleMeetingRemoved = () => {
             loadMeetings();
             setSelectedDate(null); // Clear selected date if the meeting was removed
         };
-        
+
         window.addEventListener('storage', handleStorageChange);
         window.addEventListener('meetingAdded', handleMeetingAdded);
         window.addEventListener('meetingRemoved', handleMeetingRemoved);
-        
+
         // Refresh when page becomes visible (user navigates back)
         const handleVisibilityChange = () => {
             if (!document.hidden) {
                 loadMeetings();
             }
         };
-        
+
         document.addEventListener('visibilitychange', handleVisibilityChange);
-        
+
         // Also check periodically (for same-tab updates)
         const interval = setInterval(() => {
             loadMeetings();
         }, 2000);
-        
+
         return () => {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('meetingAdded', handleMeetingAdded);
@@ -98,7 +98,7 @@ export default function StudentAccount() {
         switch (color) {
             case 'green': return 'border-green-500';
             case 'purple': return 'border-purple-500';
-            case 'blue': 
+            case 'blue':
             default: return 'border-blue-500';
         }
     };
@@ -151,8 +151,8 @@ export default function StudentAccount() {
 
     // Get month name
     const getMonthName = (month: number) => {
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                       'July', 'August', 'September', 'October', 'November', 'December'];
+        const months = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
         return months[month];
     };
 
@@ -163,21 +163,21 @@ export default function StudentAccount() {
 
     // Generate calendar days for current month/year
     const generateCalendarDays = () => {
-        const days: JSX.Element[] = [];
+        const days: React.ReactNode[] = [];
         const firstDay = new Date(currentYear, currentMonth, 1).getDay();
         const daysInMonth = getDaysInMonth(currentYear, currentMonth);
-        
+
         // Empty cells for days before month starts
         for (let i = 0; i < firstDay; i++) {
             days.push(
                 <div key={`empty-${i}`} className="bg-dark-primary rounded-lg p-3 text-center text-gray-600 h-24"></div>
             );
         }
-        
+
         // Days of the month
         const today = new Date();
         const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
-        
+
         for (let day = 1; day <= daysInMonth; day++) {
             const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayMeetings = meetings.filter(m => m.date === dateKey);
@@ -185,18 +185,16 @@ export default function StudentAccount() {
             const meetingColor = dayMeetings[0]?.color || 'blue';
             const isSelected = selectedDate === dateKey;
             const isToday = isCurrentMonth && day === today.getDate();
-            
+
             days.push(
-                <div 
-                    key={day} 
+                <div
+                    key={day}
                     onClick={() => hasMeeting ? setSelectedDate(dateKey) : setSelectedDate(null)}
-                    className={`bg-dark-primary rounded-lg p-3 text-center h-24 transition-all ${
-                        hasMeeting ? 'cursor-pointer hover:scale-105' : 'cursor-default'
-                    } ${
-                        hasMeeting ? `${getColorClass(meetingColor)} border-2 hover:border-opacity-70` : 
-                        isSelected ? 'border-2 border-gray-500' : 
-                        isToday ? 'border-2 border-yellow-500' : ''
-                    }`}
+                    className={`bg-dark-primary rounded-lg p-3 text-center h-24 transition-all ${hasMeeting ? 'cursor-pointer hover:scale-105' : 'cursor-default'
+                        } ${hasMeeting ? `${getColorClass(meetingColor)} border-2 hover:border-opacity-70` :
+                            isSelected ? 'border-2 border-gray-500' :
+                                isToday ? 'border-2 border-yellow-500' : ''
+                        }`}
                 >
                     <div className={`font-semibold mb-1 ${isToday ? 'text-yellow-400' : 'text-white'}`}>
                         {day}
@@ -212,12 +210,12 @@ export default function StudentAccount() {
                 </div>
             );
         }
-        
+
         return days;
     };
 
     // Get meetings for selected date
-    const selectedDateMeetings = selectedDate 
+    const selectedDateMeetings = selectedDate
         ? meetings.filter(m => m.date === selectedDate)
         : [];
     return (
@@ -330,7 +328,7 @@ export default function StudentAccount() {
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-bold text-white">My Calendar - Interesting Meets</h2>
                             <div className="flex items-center space-x-2">
-                                <button 
+                                <button
                                     onClick={() => navigateMonth('prev')}
                                     className="bg-dark-primary hover:bg-dark-muted text-gray-400 hover:text-white px-4 py-2 rounded-lg transition-all duration-300"
                                     title="Previous month"
@@ -340,14 +338,14 @@ export default function StudentAccount() {
                                 <span className="text-white font-semibold px-4 min-w-[180px] text-center">
                                     {getMonthName(currentMonth)} {currentYear}
                                 </span>
-                                <button 
+                                <button
                                     onClick={() => navigateMonth('next')}
                                     className="bg-dark-primary hover:bg-dark-muted text-gray-400 hover:text-white px-4 py-2 rounded-lg transition-all duration-300"
                                     title="Next month"
                                 >
                                     <FaChevronRight />
                                 </button>
-                                <button 
+                                <button
                                     onClick={goToToday}
                                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ml-2"
                                 >
@@ -377,13 +375,13 @@ export default function StudentAccount() {
                             <div id="selected-date-meetings" className="mb-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-xl font-bold text-white">
-                                        Meetings on {new Date(selectedDate).toLocaleDateString('en-US', { 
-                                            month: 'long', 
-                                            day: 'numeric', 
-                                            year: 'numeric' 
+                                        Meetings on {new Date(selectedDate).toLocaleDateString('en-US', {
+                                            month: 'long',
+                                            day: 'numeric',
+                                            year: 'numeric'
                                         })}
                                     </h3>
-                                    <button 
+                                    <button
                                         onClick={() => setSelectedDate(null)}
                                         className="text-gray-400 hover:text-white transition-colors text-sm"
                                     >
@@ -393,16 +391,16 @@ export default function StudentAccount() {
                                 <div className="space-y-3">
                                     {selectedDateMeetings.map((meeting) => {
                                         const colorClass = getColorBorder(meeting.color);
-                                        const iconColor = meeting.color === 'green' ? 'text-green-400' : 
-                                                         meeting.color === 'purple' ? 'text-purple-400' : 
-                                                         'text-blue-400';
+                                        const iconColor = meeting.color === 'green' ? 'text-green-400' :
+                                            meeting.color === 'purple' ? 'text-purple-400' :
+                                                'text-blue-400';
                                         const bgColor = meeting.color === 'green' ? 'bg-green-500/10' :
-                                                       meeting.color === 'purple' ? 'bg-purple-500/10' :
-                                                       'bg-blue-500/10';
+                                            meeting.color === 'purple' ? 'bg-purple-500/10' :
+                                                'bg-blue-500/10';
 
                                         return (
-                                            <div 
-                                                key={meeting.id} 
+                                            <div
+                                                key={meeting.id}
                                                 className={`bg-dark-primary rounded-lg p-4 border-l-4 ${colorClass} ${bgColor}`}
                                             >
                                                 <div className="flex items-start justify-between">
@@ -441,18 +439,18 @@ export default function StudentAccount() {
                             ) : (
                                 upcomingMeetings.map((meeting) => {
                                     const date = new Date(meeting.date);
-                                    const formattedDate = date.toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric', 
-                                        year: 'numeric' 
+                                    const formattedDate = date.toLocaleDateString('en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric'
                                     });
                                     const colorClass = getColorBorder(meeting.color);
-                                    const iconColor = meeting.color === 'green' ? 'text-green-400' : 
-                                                     meeting.color === 'purple' ? 'text-purple-400' : 
-                                                     'text-blue-400';
+                                    const iconColor = meeting.color === 'green' ? 'text-green-400' :
+                                        meeting.color === 'purple' ? 'text-purple-400' :
+                                            'text-blue-400';
                                     const buttonColor = meeting.color === 'green' ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400' :
-                                                       meeting.color === 'purple' ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400' :
-                                                       'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400';
+                                        meeting.color === 'purple' ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400' :
+                                            'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400';
 
                                     return (
                                         <div key={meeting.id} className={`bg-dark-primary rounded-lg p-4 border-l-4 ${colorClass}`}>

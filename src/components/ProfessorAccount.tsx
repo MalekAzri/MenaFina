@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     FaUserGear,
     FaCamera,
@@ -21,12 +21,12 @@ import {
     FaCalendar
 } from 'react-icons/fa6';
 import { useSession } from 'next-auth/react';
-import { 
-    getProfessorMeetings, 
-    addProfessorMeeting, 
+import {
+    getProfessorMeetings,
+    addProfessorMeeting,
     removeProfessorMeeting,
     getProfessorMeetingsForMonth,
-    type ProfessorMeeting 
+    type ProfessorMeeting
 } from '@/lib/professorMeetings';
 
 export default function ProfessorAccount() {
@@ -52,19 +52,19 @@ export default function ProfessorAccount() {
             const allMeetings = getProfessorMeetings();
             setMeetings(allMeetings);
         };
-        
+
         loadMeetings();
-        
+
         // Listen for storage changes
         const handleStorageChange = () => {
             loadMeetings();
         };
-        
+
         window.addEventListener('storage', handleStorageChange);
-        
+
         // Check periodically for updates
         const interval = setInterval(loadMeetings, 2000);
-        
+
         return () => {
             window.removeEventListener('storage', handleStorageChange);
             clearInterval(interval);
@@ -99,8 +99,8 @@ export default function ProfessorAccount() {
     };
 
     const getMonthName = (month: number) => {
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                       'July', 'August', 'September', 'October', 'November', 'December'];
+        const months = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
         return months[month];
     };
 
@@ -110,10 +110,10 @@ export default function ProfessorAccount() {
 
     const formatDateForDisplay = (dateStr: string): string => {
         const date = new Date(dateStr + 'T00:00:00');
-        return date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
         });
     };
 
@@ -122,19 +122,19 @@ export default function ProfessorAccount() {
 
     // Generate calendar days
     const generateCalendarDays = () => {
-        const days: JSX.Element[] = [];
+        const days: React.ReactNode[] = [];
         const firstDay = new Date(currentYear, currentMonth, 1).getDay();
         const daysInMonth = getDaysInMonth(currentYear, currentMonth);
         const today = new Date();
         const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
-        
+
         // Empty cells for days before month starts
         for (let i = 0; i < firstDay; i++) {
             days.push(
                 <div key={`empty-${i}`} className="text-center text-gray-500 py-2"></div>
             );
         }
-        
+
         // Days of the month
         for (let day = 1; day <= daysInMonth; day++) {
             const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -143,23 +143,22 @@ export default function ProfessorAccount() {
             const meetingColor = dayMeetings[0]?.color || 'blue';
             const isSelected = selectedDate === dateKey;
             const isToday = isCurrentMonth && day === today.getDate();
-            
-            const colorClasses = {
+
+            const colorClasses: Record<string, string> = {
                 blue: 'bg-blue-600',
                 green: 'bg-green-600',
                 purple: 'bg-purple-600'
             };
-            
+
             days.push(
-                <div 
-                    key={day} 
+                <div
+                    key={day}
                     onClick={() => hasMeeting ? setSelectedDate(dateKey) : setSelectedDate(null)}
-                    className={`text-center py-2 rounded cursor-pointer transition-all ${
-                        hasMeeting ? `${colorClasses[meetingColor]} text-white relative` : 
+                    className={`text-center py-2 rounded cursor-pointer transition-all ${hasMeeting ? `${colorClasses[meetingColor]} text-white relative` :
                         isSelected ? 'bg-dark-muted text-white' :
-                        isToday ? 'border-2 border-yellow-500 text-white' :
-                        'text-white hover:bg-dark-muted'
-                    }`}
+                            isToday ? 'border-2 border-yellow-500 text-white' :
+                                'text-white hover:bg-dark-muted'
+                        }`}
                 >
                     {day}
                     {hasMeeting && (
@@ -168,11 +167,11 @@ export default function ProfessorAccount() {
                 </div>
             );
         }
-        
+
         return days;
     };
 
-    const selectedDateMeetings = selectedDate 
+    const selectedDateMeetings = selectedDate
         ? meetings.filter(m => m.date === selectedDate)
         : [];
 
@@ -281,7 +280,7 @@ export default function ProfessorAccount() {
                                 <FaCalendarDays className="text-purple-400 mr-3" />
                                 My Meeting Calendar
                             </h2>
-                            <button 
+                            <button
                                 onClick={() => setShowAddForm(true)}
                                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
                             >
@@ -292,7 +291,7 @@ export default function ProfessorAccount() {
 
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center space-x-2">
-                                <button 
+                                <button
                                     onClick={() => navigateMonth('prev')}
                                     className="bg-dark-primary hover:bg-dark-muted text-gray-400 hover:text-white px-4 py-2 rounded-lg transition-all duration-300"
                                 >
@@ -301,13 +300,13 @@ export default function ProfessorAccount() {
                                 <span className="text-white font-semibold px-4 min-w-[180px] text-center">
                                     {getMonthName(currentMonth)} {currentYear}
                                 </span>
-                                <button 
+                                <button
                                     onClick={() => navigateMonth('next')}
                                     className="bg-dark-primary hover:bg-dark-muted text-gray-400 hover:text-white px-4 py-2 rounded-lg transition-all duration-300"
                                 >
                                     <FaChevronRight />
                                 </button>
-                                <button 
+                                <button
                                     onClick={goToToday}
                                     className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ml-2"
                                 >
@@ -337,7 +336,7 @@ export default function ProfessorAccount() {
                                     <h3 className="text-lg font-bold text-white">
                                         Meetings on {formatDateForDisplay(selectedDate)}
                                     </h3>
-                                    <button 
+                                    <button
                                         onClick={() => setSelectedDate(null)}
                                         className="text-gray-400 hover:text-white transition-colors"
                                     >
@@ -346,7 +345,7 @@ export default function ProfessorAccount() {
                                 </div>
                                 <div className="space-y-3">
                                     {selectedDateMeetings.map((meeting) => {
-                                        const colorClasses = {
+                                        const colorClasses: Record<string, string> = {
                                             blue: 'bg-blue-500',
                                             green: 'bg-green-500',
                                             purple: 'bg-purple-500'
@@ -373,7 +372,7 @@ export default function ProfessorAccount() {
                                                     <span className={`text-xs ${statusColors[meeting.status]} text-white px-2 py-1 rounded capitalize`}>
                                                         {meeting.status}
                                                     </span>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleDeleteMeeting(meeting.id)}
                                                         className="text-red-400 hover:text-red-300"
                                                         title="Delete meeting"
@@ -403,7 +402,7 @@ export default function ProfessorAccount() {
                                 })
                                 .slice(0, 5)
                                 .map((meeting) => {
-                                    const colorClasses = {
+                                    const colorClasses: Record<string, string> = {
                                         blue: 'bg-blue-500',
                                         green: 'bg-green-500',
                                         purple: 'bg-purple-500'
@@ -427,7 +426,7 @@ export default function ProfessorAccount() {
                                                 <span className={`text-xs ${statusColors[meeting.status]} text-white px-2 py-1 rounded capitalize`}>
                                                     {meeting.status}
                                                 </span>
-                                                <button 
+                                                <button
                                                     onClick={() => handleDeleteMeeting(meeting.id)}
                                                     className="text-red-400 hover:text-red-300"
                                                     title="Delete meeting"
@@ -442,10 +441,10 @@ export default function ProfessorAccount() {
                                 const meetingDate = new Date(m.date);
                                 return meetingDate >= new Date();
                             }).length === 0 && (
-                                <div className="bg-dark-primary rounded-lg p-6 border border-dark-border text-center">
-                                    <p className="text-gray-400">No upcoming meetings. Click "Add Meeting" to schedule one!</p>
-                                </div>
-                            )}
+                                    <div className="bg-dark-primary rounded-lg p-6 border border-dark-border text-center">
+                                        <p className="text-gray-400">No upcoming meetings. Click "Add Meeting" to schedule one!</p>
+                                    </div>
+                                )}
                         </div>
                     </div>
 
@@ -455,7 +454,7 @@ export default function ProfessorAccount() {
                             <div className="bg-dark-secondary rounded-xl border border-dark-border p-6 w-full max-w-md">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-2xl font-bold text-white">Add New Meeting</h2>
-                                    <button 
+                                    <button
                                         onClick={() => setShowAddForm(false)}
                                         className="text-gray-400 hover:text-white"
                                     >
@@ -465,10 +464,10 @@ export default function ProfessorAccount() {
                                 <form onSubmit={handleAddMeeting} className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-2">Title *</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             value={formData.title}
-                                            onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                             className="w-full bg-dark-primary border border-dark-border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
                                             required
                                         />
@@ -476,18 +475,18 @@ export default function ProfessorAccount() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-300 mb-2">Date *</label>
-                                            <input 
-                                                type="date" 
+                                            <input
+                                                type="date"
                                                 value={formData.date}
-                                                onChange={(e) => setFormData({...formData, date: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                                 className="w-full bg-dark-primary border border-dark-border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
                                                 required
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-300 mb-2">Time *</label>
-                                            <input 
-                                                type="time" 
+                                            <input
+                                                type="time"
                                                 value={formData.time ? (() => {
                                                     // Convert "2:00 PM" to "14:00" for time input
                                                     const match = formData.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -508,7 +507,7 @@ export default function ProfessorAccount() {
                                                         const hour24 = parseInt(hours);
                                                         const hour12 = hour24 % 12 || 12;
                                                         const ampm = hour24 >= 12 ? 'PM' : 'AM';
-                                                        setFormData({...formData, time: `${hour12}:${minutes} ${ampm}`});
+                                                        setFormData({ ...formData, time: `${hour12}:${minutes} ${ampm}` });
                                                     }
                                                 }}
                                                 className="w-full bg-dark-primary border border-dark-border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
@@ -519,9 +518,9 @@ export default function ProfessorAccount() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-300 mb-2">Duration</label>
-                                            <select 
+                                            <select
                                                 value={formData.duration}
-                                                onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                                                 className="w-full bg-dark-primary border border-dark-border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
                                             >
                                                 <option>15 minutes</option>
@@ -534,19 +533,19 @@ export default function ProfessorAccount() {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 value={formData.location}
-                                                onChange={(e) => setFormData({...formData, location: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                                 className="w-full bg-dark-primary border border-dark-border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
                                             />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-2">Color</label>
-                                        <select 
+                                        <select
                                             value={formData.color}
-                                            onChange={(e) => setFormData({...formData, color: e.target.value as 'blue' | 'green' | 'purple'})}
+                                            onChange={(e) => setFormData({ ...formData, color: e.target.value as 'blue' | 'green' | 'purple' })}
                                             className="w-full bg-dark-primary border border-dark-border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
                                         >
                                             <option value="blue">Blue</option>
@@ -556,21 +555,21 @@ export default function ProfessorAccount() {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-                                        <textarea 
+                                        <textarea
                                             value={formData.description}
-                                            onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                             rows={3}
                                             className="w-full bg-dark-primary border border-dark-border rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none resize-none"
                                         />
                                     </div>
                                     <div className="flex space-x-3">
-                                        <button 
+                                        <button
                                             type="submit"
                                             className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium transition-all duration-300"
                                         >
                                             Add Meeting
                                         </button>
-                                        <button 
+                                        <button
                                             type="button"
                                             onClick={() => setShowAddForm(false)}
                                             className="flex-1 bg-dark-primary hover:bg-dark-muted text-white py-3 rounded-lg font-medium transition-all duration-300"
