@@ -13,7 +13,8 @@ import {
     FaArrowRight,
     FaGoogle,
     FaMicrosoft,
-    FaShieldHalved
+    FaShieldHalved,
+    FaCircleExclamation
 } from 'react-icons/fa6';
 
 import { useRouter } from 'next/navigation';
@@ -25,9 +26,11 @@ export default function LoginForm() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null); // Clear previous errors
         setLoading(true);
 
         try {
@@ -38,16 +41,25 @@ export default function LoginForm() {
             });
 
             if (result?.error) {
-                alert('Invalid credentials');
+                setError('Invalid credentials. Please register first or check your email and password.');
                 setLoading(false);
             } else {
-                router.push('/');
+                router.push('/home');
                 router.refresh();
             }
         } catch (error) {
             console.error('Login error:', error);
-            alert('An error occurred during login');
+            setError('An error occurred during login. Please try again.');
             setLoading(false);
+        }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setError(null); // Clear error when user starts typing
+        if (e.target.name === 'email') {
+            setEmail(e.target.value);
+        } else if (e.target.name === 'password') {
+            setPassword(e.target.value);
         }
     };
 
@@ -63,6 +75,14 @@ export default function LoginForm() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Error Message Display */}
+                    {error && (
+                        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start space-x-3">
+                            <FaCircleExclamation className="text-red-500 text-xl flex-shrink-0 mt-0.5" />
+                            <p className="text-red-400 text-sm flex-1">{error}</p>
+                        </div>
+                    )}
+
                     <div id="email-field">
                         <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
                             <FaEnvelope className="mr-2" />
@@ -71,10 +91,13 @@ export default function LoginForm() {
                         <input
                             type="email"
                             id="email"
+                            name="email"
                             placeholder="your.email@example.com"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 bg-dark-primary border border-dark-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                            onChange={handleInputChange}
+                            className={`w-full px-4 py-3 bg-dark-primary border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${
+                                error ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-dark-border focus:border-blue-500 focus:ring-blue-500/20'
+                            }`}
                             required
                         />
                     </div>
@@ -88,10 +111,13 @@ export default function LoginForm() {
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 id="password"
+                                name="password"
                                 placeholder="Enter your password"
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-3 bg-dark-primary border border-dark-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all pr-12"
+                                onChange={handleInputChange}
+                                className={`w-full px-4 py-3 bg-dark-primary border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all pr-12 ${
+                                    error ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-dark-border focus:border-blue-500 focus:ring-blue-500/20'
+                                }`}
                                 required
                             />
                             <button
@@ -116,10 +142,11 @@ export default function LoginForm() {
 
                     <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 cursor-pointer"
+                        disabled={loading}
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
-                        <span>Sign In</span>
-                        <FaArrowRight />
+                        <span>{loading ? 'Signing in...' : 'Sign In'}</span>
+                        {!loading && <FaArrowRight />}
                     </button>
                 </form>
 

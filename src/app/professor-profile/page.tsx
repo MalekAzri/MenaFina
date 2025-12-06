@@ -1,7 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Header from '@/components/Header';
 import Link from 'next/link';
+import Image from 'next/image';
+import { addMeeting, getMeetings, removeMeetingByDetails, findMeetingByDetails } from '@/lib/meetings';
+import { getWebinarsByProfessor, formatDateForDisplay, type Webinar } from '@/lib/webinars';
 import {
     FaGraduationCap,
     FaArrowLeft,
@@ -18,6 +23,67 @@ import {
 } from 'react-icons/fa6';
 
 export default function ProfessorProfilePage() {
+    const { data: session } = useSession();
+    const [interestedMeetings, setInterestedMeetings] = useState<Set<string>>(new Set());
+    const [webinars] = useState<Webinar[]>(() => getWebinarsByProfessor('Dr. Michael Chen'));
+    const isProfessor = session?.user?.role === 'professor';
+
+    useEffect(() => {
+        // Load existing meetings to check which ones are already marked
+        const meetings = getMeetings();
+        const meetingKeys = new Set(
+            meetings.map(m => `${m.title}-${m.date}-${m.time}`)
+        );
+        setInterestedMeetings(meetingKeys);
+    }, []);
+
+    const handleMarkInterest = (webinar: Webinar) => {
+        // Use date directly from webinar (already in YYYY-MM-DD format)
+        const key = `${webinar.title}-${webinar.date}-${webinar.time}`;
+        
+        // Check if already interested
+        if (interestedMeetings.has(key)) {
+            // Unmark interest - remove the meeting
+            const removed = removeMeetingByDetails(webinar.title, webinar.date, webinar.time);
+            if (removed) {
+                setInterestedMeetings(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(key);
+                    return newSet;
+                });
+                
+                // Dispatch custom event to notify other components
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('meetingRemoved', { detail: { title: webinar.title, date: webinar.date, time: webinar.time } }));
+                }
+            }
+        } else {
+            // Mark interest - add the meeting
+            const meeting = addMeeting({
+                title: webinar.title,
+                professor: webinar.professor,
+                date: webinar.date, // Already in YYYY-MM-DD format
+                time: webinar.time,
+                duration: webinar.duration,
+                location: webinar.location,
+                status: 'interested',
+                color: webinar.color,
+            });
+
+            // Update state to reflect the change
+            setInterestedMeetings(prev => new Set([...prev, key]));
+            
+            // Dispatch custom event to notify other components
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('meetingAdded', { detail: meeting }));
+            }
+        }
+    };
+
+    const isInterested = (webinar: Webinar): boolean => {
+        const key = `${webinar.title}-${webinar.date}-${webinar.time}`;
+        return interestedMeetings.has(key);
+    };
     return (
         <div className="bg-dark-primary text-white font-inter min-h-screen flex flex-col">
             <Header />
@@ -25,9 +91,14 @@ export default function ProfessorProfilePage() {
             <main id="main-content" className="max-w-7xl w-full mx-auto px-6 py-8 flex-grow">
                 <section id="professor-info" className="bg-dark-secondary rounded-xl p-8 mb-8 border border-dark-border">
                     <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-6">
-                        <div className="w-24 h-24 rounded-full overflow-hidden flex-shrink-0 bg-gray-700">
-                            {/* Placeholder for professor avatar */}
-                            <div className="w-full h-full flex items-center justify-center text-4xl">👨‍🏫</div>
+                        <div className="w-24 h-24 rounded-full overflow-hidden flex-shrink-0 bg-gray-700 border-2 border-blue-500">
+                            <Image
+                                src="https://ui-avatars.com/api/?name=Michael+Chen&size=150&background=2563eb&color=fff&bold=true"
+                                alt="Dr. Michael Chen"
+                                width={96}
+                                height={96}
+                                className="w-full h-full object-cover"
+                            />
                         </div>
                         <div className="flex-1 text-center md:text-left">
                             <div className="flex flex-col md:flex-row items-center justify-between mb-4">
@@ -204,41 +275,49 @@ export default function ProfessorProfilePage() {
                         <section id="calendar-section" className="bg-dark-secondary rounded-xl p-6 border border-dark-border mb-6">
                             <h2 className="text-xl font-bold text-white mb-4">Upcoming Meetings</h2>
                             <div className="space-y-4">
-                                <div className="bg-dark-primary rounded-lg p-4 border border-dark-border">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h4 className="font-semibold text-white">Portfolio Review Session</h4>
-                                        <span className="text-xs text-blue-400 bg-blue-400/20 px-2 py-1 rounded">Available</span>
-                                    </div>
-                                    <p className="text-gray-400 text-sm mb-2">Dec 15, 2024 - 2:00 PM</p>
-                                    <p className="text-gray-500 text-xs mb-3">45 minutes • Online</p>
-                                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm transition-colors">
-                                        Mark Interest
-                                    </button>
-                                </div>
+                                {webinars.map((webinar) => {
+                                    const displayDate = formatDateForDisplay(webinar.date);
+                                    const interested = isInterested(webinar);
+                                    const statusColor = webinar.status === 'available' 
+                                        ? (webinar.color === 'green' ? 'text-green-400 bg-green-400/20' : 
+                                           webinar.color === 'purple' ? 'text-purple-400 bg-purple-400/20' : 
+                                           'text-blue-400 bg-blue-400/20')
+                                        : 'text-red-400 bg-red-400/20';
+                                    const statusText = webinar.status === 'available' ? 'Available' : 'Full';
 
-                                <div className="bg-dark-primary rounded-lg p-4 border border-dark-border">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h4 className="font-semibold text-white">Financial Modeling Q&amp;A</h4>
-                                        <span className="text-xs text-green-400 bg-green-400/20 px-2 py-1 rounded">Available</span>
-                                    </div>
-                                    <p className="text-gray-400 text-sm mb-2">Dec 18, 2024 - 4:00 PM</p>
-                                    <p className="text-gray-500 text-xs mb-3">30 minutes • Online</p>
-                                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm transition-colors">
-                                        Mark Interest
-                                    </button>
-                                </div>
-
-                                <div className="bg-dark-primary rounded-lg p-4 border border-dark-border">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h4 className="font-semibold text-white">Investment Strategy Workshop</h4>
-                                        <span className="text-xs text-red-400 bg-red-400/20 px-2 py-1 rounded">Full</span>
-                                    </div>
-                                    <p className="text-gray-400 text-sm mb-2">Dec 20, 2024 - 1:00 PM</p>
-                                    <p className="text-gray-500 text-xs mb-3">60 minutes • Online</p>
-                                    <button disabled className="w-full bg-gray-600 text-gray-400 py-2 rounded-lg text-sm cursor-not-allowed">
-                                        Fully Booked
-                                    </button>
-                                </div>
+                                    return (
+                                        <div key={webinar.id} className="bg-dark-primary rounded-lg p-4 border border-dark-border">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h4 className="font-semibold text-white">{webinar.title}</h4>
+                                                <span className={`text-xs ${statusColor} px-2 py-1 rounded`}>
+                                                    {statusText}
+                                                </span>
+                                            </div>
+                                            <p className="text-gray-400 text-sm mb-2">{displayDate} - {webinar.time}</p>
+                                            <p className="text-gray-500 text-xs mb-3">{webinar.duration} • {webinar.location}</p>
+                                            {isProfessor ? (
+                                                <div className="w-full py-2 rounded-lg text-sm bg-gray-600/50 text-gray-400 text-center">
+                                                    Professors cannot mark interest in webinars
+                                                </div>
+                                            ) : webinar.status === 'available' ? (
+                                                <button 
+                                                    onClick={() => handleMarkInterest(webinar)}
+                                                    className={`w-full py-2 rounded-lg text-sm transition-colors ${
+                                                        interested
+                                                            ? 'bg-green-600 hover:bg-red-600 text-white'
+                                                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                    }`}
+                                                >
+                                                    {interested ? '✓ Interest Marked - Click to Unmark' : 'Mark Interest'}
+                                                </button>
+                                            ) : (
+                                                <button disabled className="w-full bg-gray-600 text-gray-400 py-2 rounded-lg text-sm cursor-not-allowed">
+                                                    Fully Booked
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </section>
 

@@ -2,6 +2,7 @@
 
 import Header from '@/components/Header';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
     FaGraduationCap,
     FaRobot,
@@ -82,7 +83,13 @@ export default function ProfStudentSpacePage() {
                             <div className="flex flex-col md:flex-row items-start justify-between mb-6 space-y-4 md:space-y-0">
                                 <div className="flex items-start space-x-4">
                                     <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-blue-500 flex-shrink-0 bg-gray-600">
-                                        {/* Placeholder */}
+                                        <Image
+                                            src="https://ui-avatars.com/api/?name=Michael+Anderson&size=150&background=2563eb&color=fff&bold=true"
+                                            alt="Dr. Michael Anderson"
+                                            width={80}
+                                            height={80}
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
                                     <div>
                                         <h3 className="text-2xl font-bold text-white mb-1">Dr. Michael Anderson</h3>
@@ -104,9 +111,9 @@ export default function ProfStudentSpacePage() {
                                         </div>
                                     </div>
                                 </div>
-                                <button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg transition-all flex items-center whitespace-nowrap">
+                                <Link href="/professor-profile" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg transition-all flex items-center whitespace-nowrap">
                                     <FaUserPlus className="mr-2" />View Profile
-                                </button>
+                                </Link>
                             </div>
 
                             <div id="courses-list-1" className="space-y-4">
@@ -187,7 +194,13 @@ export default function ProfStudentSpacePage() {
                             <div className="flex flex-col md:flex-row items-start justify-between mb-6 space-y-4 md:space-y-0">
                                 <div className="flex items-start space-x-4">
                                     <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-purple-500 flex-shrink-0 bg-gray-600">
-                                        {/* Placeholder */}
+                                        <Image
+                                            src="https://ui-avatars.com/api/?name=Sarah+Mitchell&size=150&background=9333ea&color=fff&bold=true"
+                                            alt="Dr. Sarah Mitchell"
+                                            width={80}
+                                            height={80}
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
                                     <div>
                                         <h3 className="text-2xl font-bold text-white mb-1">Dr. Sarah Mitchell</h3>
@@ -209,9 +222,9 @@ export default function ProfStudentSpacePage() {
                                         </div>
                                     </div>
                                 </div>
-                                <button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-2 rounded-lg transition-all flex items-center whitespace-nowrap">
+                                <Link href="/professor-profile" className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-2 rounded-lg transition-all flex items-center whitespace-nowrap">
                                     <FaUserPlus className="mr-2" />View Profile
-                                </button>
+                                </Link>
                             </div>
 
                             <div id="courses-list-2" className="space-y-4">
@@ -258,7 +271,13 @@ export default function ProfStudentSpacePage() {
                             <div className="flex flex-col md:flex-row items-start justify-between mb-6 space-y-4 md:space-y-0">
                                 <div className="flex items-start space-x-4">
                                     <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-green-500 flex-shrink-0 bg-gray-600">
-                                        {/* Placeholder */}
+                                        <Image
+                                            src="https://ui-avatars.com/api/?name=James+Thompson&size=150&background=16a34a&color=fff&bold=true"
+                                            alt="Dr. James Thompson"
+                                            width={80}
+                                            height={80}
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
                                     <div>
                                         <h3 className="text-2xl font-bold text-white mb-1">Dr. James Thompson</h3>
@@ -280,9 +299,9 @@ export default function ProfStudentSpacePage() {
                                         </div>
                                     </div>
                                 </div>
-                                <button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-2 rounded-lg transition-all flex items-center whitespace-nowrap">
+                                <Link href="/professor-profile" className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-2 rounded-lg transition-all flex items-center whitespace-nowrap">
                                     <FaUserPlus className="mr-2" />View Profile
-                                </button>
+                                </Link>
                             </div>
 
                             <div id="courses-list-3" className="space-y-4">

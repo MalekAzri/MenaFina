@@ -10,21 +10,28 @@ const handler = NextAuth({
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials, req) {
-                // Mock authentication - accept any login for prototype
-                if (credentials?.email) {
-                    // Simulate user based on email or role
-                    const isProfessor = credentials.email.toLowerCase().includes('professor');
-
-                    const user = {
-                        id: isProfessor ? "2" : "1",
-                        name: isProfessor ? "Dr. Sarah Johnson" : "Student User",
-                        email: credentials.email,
-                        image: isProfessor ? "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" : "https://i.pravatar.cc/150?u=student",
-                        role: isProfessor ? "professor" : "student"
-                    }
-                    return user
+                if (!credentials?.email || !credentials?.password) {
+                    return null;
                 }
-                return null
+
+                // Import and verify user from registered users
+                const { verifyUser } = await import('@/lib/users');
+                const user = verifyUser(credentials.email, credentials.password);
+
+                if (!user) {
+                    return null; // Invalid credentials
+                }
+
+                // Return user object for NextAuth
+                return {
+                    id: user.id,
+                    name: user.firstName, // Use firstName as the display name
+                    email: user.email,
+                    image: user.role === 'professor'
+                        ? "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg"
+                        : "https://i.pravatar.cc/150?u=student",
+                    role: user.role,
+                };
             }
         })
     ],
@@ -36,13 +43,19 @@ const handler = NextAuth({
             if (user) {
                 token.id = user.id;
                 token.role = user.role;
+                token.name = user.name || undefined;
+                token.email = user.email || undefined;
+                token.image = user.image || undefined;
             }
             return token;
         },
         async session({ session, token }) {
             if (session.user) {
-                session.user.id = token.id;
-                session.user.role = token.role;
+                session.user.id = token.id as string;
+                session.user.role = token.role as string;
+                session.user.name = token.name as string;
+                session.user.email = token.email as string;
+                session.user.image = token.image as string;
             }
             return session
         },

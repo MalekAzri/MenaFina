@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
 import {
     FaGraduationCap,
     FaHouse,
@@ -15,7 +14,8 @@ import {
     FaLock,
     FaEye,
     FaEyeSlash,
-    FaBuildingColumns
+    FaBuildingColumns,
+    FaCircleExclamation
 } from 'react-icons/fa6';
 import Header from '@/components/Header';
 
@@ -24,6 +24,8 @@ export default function RegisterPage() {
     const [role, setRole] = useState<'student' | 'professor'>('student');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -40,6 +42,7 @@ export default function RegisterPage() {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
 
+        setError(null); // Clear error when user starts typing
         setFormData(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value
@@ -52,33 +55,52 @@ export default function RegisterPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+        setLoading(true);
 
         if (formData.password !== formData.confirmPassword) {
-            alert('Passwords do not match!');
+            setError('Passwords do not match!');
+            setLoading(false);
             return;
         }
 
         if (formData.password.length < 8) {
-            alert('Password must be at least 8 characters long!');
+            setError('Password must be at least 8 characters long!');
+            setLoading(false);
             return;
         }
 
-        // Simulate registration API call
-        // In a real app, create user in DB here
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    password: formData.password,
+                    role: role,
+                    university: formData.university,
+                    specialization: formData.specialization,
+                }),
+            });
 
-        // Then auto-login
-        const result = await signIn('credentials', {
-            email: formData.email,
-            password: formData.password,
-            redirect: false,
-        });
+            const data = await response.json();
 
-        if (result?.ok) {
-            alert(`Account created successfully as ${role}! Redirecting...`);
-            router.push('/');
-        } else {
-            // Fallback if signin fails
+            if (!response.ok) {
+                setError(data.error || 'Registration failed');
+                setLoading(false);
+                return;
+            }
+
+            // Redirect to login page after successful registration
             router.push('/login');
+        } catch (error) {
+            console.error('Registration error:', error);
+            setError('An error occurred during registration');
+            setLoading(false);
         }
     };
 
@@ -102,6 +124,14 @@ export default function RegisterPage() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Error Message Display */}
+                            {error && (
+                                <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start space-x-3">
+                                    <FaCircleExclamation className="text-red-500 text-xl flex-shrink-0 mt-0.5" />
+                                    <p className="text-red-400 text-sm flex-1">{error}</p>
+                                </div>
+                            )}
+
                             <div id="role-selection" className="mb-6">
                                 <label className="block text-sm font-medium text-gray-300 mb-3">I am a:</label>
                                 <div className="grid grid-cols-2 gap-3">
@@ -177,7 +207,9 @@ export default function RegisterPage() {
                                             required
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className="w-full bg-dark-primary border border-dark-border rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors"
+                                            className={`w-full bg-dark-primary border rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-colors ${
+                                                error ? 'border-red-500/50 focus:border-red-500 focus:ring-2 focus:ring-red-500/20' : 'border-dark-border focus:border-blue-500'
+                                            }`}
                                             placeholder="your.email@example.com"
                                         />
                                     </div>
@@ -196,7 +228,9 @@ export default function RegisterPage() {
                                             required
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="w-full bg-dark-primary border border-dark-border rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors"
+                                            className={`w-full bg-dark-primary border rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-500 focus:outline-none transition-colors ${
+                                                error ? 'border-red-500/50 focus:border-red-500 focus:ring-2 focus:ring-red-500/20' : 'border-dark-border focus:border-blue-500'
+                                            }`}
                                             placeholder="Create a strong password"
                                         />
                                         <button
@@ -222,7 +256,9 @@ export default function RegisterPage() {
                                             required
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
-                                            className="w-full bg-dark-primary border border-dark-border rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors"
+                                            className={`w-full bg-dark-primary border rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-500 focus:outline-none transition-colors ${
+                                                error ? 'border-red-500/50 focus:border-red-500 focus:ring-2 focus:ring-red-500/20' : 'border-dark-border focus:border-blue-500'
+                                            }`}
                                             placeholder="Confirm your password"
                                         />
                                         <button
@@ -296,9 +332,13 @@ export default function RegisterPage() {
                                 </label>
                             </div>
 
-                            <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center">
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                            >
                                 <FaUserPlus className="mr-2" />
-                                Create Account
+                                {loading ? 'Creating Account...' : 'Create Account'}
                             </button>
                         </form>
 

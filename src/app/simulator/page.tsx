@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
     FaChartLine,
@@ -30,19 +30,74 @@ interface AnalysisResult {
 }
 
 interface RecentAnalysis {
+    id: string;
     company: string;
     invest: boolean;
     time: string;
+    timestamp: number;
+    confidence?: number;
+    growth?: string;
+    risk?: string;
+}
+
+function getTimeAgo(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return 'Just now';
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    return new Date(timestamp).toLocaleDateString();
 }
 
 export default function SimulatorPage() {
     const [companyName, setCompanyName] = useState('');
     const [result, setResult] = useState<AnalysisResult | null>(null);
-    const [recentAnalyses, setRecentAnalyses] = useState<RecentAnalysis[]>([
-        { company: 'Apple Inc.', invest: true, time: '2 hours ago' },
-        { company: 'GameStop Corp.', invest: false, time: '1 day ago' },
-        { company: 'Microsoft Corp.', invest: true, time: '3 days ago' },
-    ]);
+    const [recentAnalyses, setRecentAnalyses] = useState<RecentAnalysis[]>([]);
+    const [savedMessage, setSavedMessage] = useState<string | null>(null);
+
+    // Load saved analyses from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('menafina_saved_analyses');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                // Update time strings for loaded analyses
+                const updated = parsed.map((analysis: RecentAnalysis) => ({
+                    ...analysis,
+                    time: getTimeAgo(analysis.timestamp),
+                }));
+                setRecentAnalyses(updated);
+            } catch (e) {
+                console.error('Error loading saved analyses:', e);
+            }
+        } else {
+            // Default mock data if no saved analyses
+            const defaultAnalyses: RecentAnalysis[] = [
+                { id: '1', company: 'Apple Inc.', invest: true, time: '2 hours ago', timestamp: Date.now() - 7200000 },
+                { id: '2', company: 'GameStop Corp.', invest: false, time: '1 day ago', timestamp: Date.now() - 86400000 },
+                { id: '3', company: 'Microsoft Corp.', invest: true, time: '3 days ago', timestamp: Date.now() - 259200000 },
+            ];
+            setRecentAnalyses(defaultAnalyses);
+        }
+    }, []);
+
+    // Update time strings periodically
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setRecentAnalyses(prev => prev.map(analysis => ({
+                ...analysis,
+                time: getTimeAgo(analysis.timestamp),
+            })));
+        }, 60000); // Update every minute
+
+        return () => clearInterval(interval);
+    }, []);
 
     const analyzeCompany = () => {
         if (!companyName.trim()) {
@@ -67,12 +122,6 @@ export default function SimulatorPage() {
 
         setResult(analysis);
 
-        // Add to recent (mock update)
-        setRecentAnalyses(prev => [
-            { company: companyName, invest: analysis.invest, time: 'Just now' },
-            ...prev.slice(0, 2)
-        ]);
-
         // Scroll to result
         setTimeout(() => {
             document.getElementById('analysis-result')?.scrollIntoView({ behavior: 'smooth' });
@@ -86,7 +135,44 @@ export default function SimulatorPage() {
     };
 
     const saveAnalysis = () => {
-        alert('Analysis saved to your account!');
+        if (!result || !companyName.trim()) {
+            return;
+        }
+
+        const timestamp = Date.now();
+        const newAnalysis: RecentAnalysis = {
+            id: `analysis_${timestamp}`,
+            company: companyName.trim(),
+            invest: result.invest,
+            time: 'Just now',
+            timestamp: timestamp,
+            confidence: result.confidence,
+            growth: result.growth,
+            risk: result.risk,
+        };
+
+        // Add to recent analyses at the top
+        setRecentAnalyses(prev => {
+            // Check if this company was already analyzed recently
+            const filtered = prev.filter(item => item.company.toLowerCase() !== companyName.toLowerCase());
+            const updated = [newAnalysis, ...filtered].slice(0, 10); // Keep max 10 analyses
+            
+            // Save to localStorage
+            localStorage.setItem('menafina_saved_analyses', JSON.stringify(updated));
+            
+            return updated;
+        });
+
+        // Show success message
+        setSavedMessage('Analysis saved successfully!');
+        setTimeout(() => {
+            setSavedMessage(null);
+        }, 3000);
+
+        // Scroll to recent analyses section
+        setTimeout(() => {
+            document.getElementById('recent-analyses')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -201,24 +287,43 @@ export default function SimulatorPage() {
                         </section>
                     )}
 
-                    <section className="bg-dark-secondary rounded-2xl border border-dark-border p-8">
+                    <section id="recent-analyses" className="bg-dark-secondary rounded-2xl border border-dark-border p-8">
                         <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
                             <FaClockRotateLeft className="mr-3 text-blue-400" />
                             Recent Analyses
                         </h3>
+                        
+                        {savedMessage && (
+                            <div className="mb-4 bg-green-500/10 border border-green-500/50 rounded-lg p-3 flex items-center space-x-2">
+                                <FaCheck className="text-green-400" />
+                                <span className="text-green-400 text-sm">{savedMessage}</span>
+                            </div>
+                        )}
+
                         <div className="space-y-4">
-                            {recentAnalyses.map((item, index) => (
-                                <div key={index} className="flex items-center justify-between bg-dark-primary rounded-lg p-4">
-                                    <div className="flex items-center space-x-4">
-                                        <div className={`w-3 h-3 ${item.invest ? 'bg-green-500' : 'bg-red-500'} rounded-full`}></div>
-                                        <span className="font-semibold">{item.company}</span>
-                                        <span className={`${item.invest ? 'text-green-400' : 'text-red-400'} text-sm`}>
-                                            {item.invest ? '✅ INVEST' : '❌ DON\'T INVEST'}
-                                        </span>
-                                    </div>
-                                    <span className="text-gray-400 text-sm">{item.time}</span>
+                            {recentAnalyses.length === 0 ? (
+                                <div className="text-center py-8 text-gray-400">
+                                    <p>No saved analyses yet. Analyze a company and save it to see it here!</p>
                                 </div>
-                            ))}
+                            ) : (
+                                recentAnalyses.map((item) => (
+                                    <div key={item.id} className="flex items-center justify-between bg-dark-primary rounded-lg p-4 hover:bg-dark-muted transition-colors">
+                                        <div className="flex items-center space-x-4">
+                                            <div className={`w-3 h-3 ${item.invest ? 'bg-green-500' : 'bg-red-500'} rounded-full`}></div>
+                                            <span className="font-semibold">{item.company}</span>
+                                            <span className={`${item.invest ? 'text-green-400' : 'text-red-400'} text-sm`}>
+                                                {item.invest ? '✅ INVEST' : '❌ DON\'T INVEST'}
+                                            </span>
+                                            {item.confidence && (
+                                                <span className="text-gray-500 text-xs">
+                                                    {item.confidence}% confidence
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className="text-gray-400 text-sm">{item.time}</span>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </section>
                 </div>
