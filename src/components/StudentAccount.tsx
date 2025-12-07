@@ -5,8 +5,6 @@ import {
     FaPenToSquare,
     FaCircle,
     FaEnvelope,
-    FaPhone,
-    FaLocationDot,
     FaCalendar,
     FaCalendarCheck,
     FaBook,
@@ -14,7 +12,8 @@ import {
     FaRightFromBracket,
     FaChevronLeft,
     FaChevronRight,
-    FaClock
+    FaClock,
+    FaLocationDot
 } from 'react-icons/fa6';
 import { signOut, useSession } from 'next-auth/react';
 import { getMeetings, getMeetingsForMonth, type Meeting } from '@/lib/meetings';
@@ -244,8 +243,8 @@ export default function StudentAccount() {
                                     <img src="/profile-picture.png" alt="Profile" className="w-full h-full object-cover" />
                                 )}
                             </div>
-                            <h2 className="text-2xl font-bold text-white mb-1">Sarah Johnson</h2>
-                            <p className="text-gray-400 text-sm mb-3">Student</p>
+                            <h2 className="text-2xl font-bold text-white mb-1">{session?.user?.name || 'Student'}</h2>
+                            <p className="text-gray-400 text-sm mb-3 capitalized">{session?.user?.role ? session.user.role.charAt(0).toUpperCase() + session.user.role.slice(1) : 'Student'}</p>
                             <span className="bg-green-500/20 text-green-400 px-4 py-1 rounded-full text-sm font-medium flex items-center">
                                 <FaCircle className="text-xs mr-2" />Active
                             </span>
@@ -257,15 +256,7 @@ export default function StudentAccount() {
                                     <FaEnvelope className="w-5" />
                                     <span className="ml-2">Email</span>
                                 </div>
-                                <p className="text-white font-medium ml-7">sarah.johnson@email.com</p>
-                            </div>
-
-                            <div className="bg-dark-primary rounded-lg p-4 border border-dark-border">
-                                <div className="flex items-center text-gray-400 text-sm mb-1">
-                                    <FaPhone className="w-5" />
-                                    <span className="ml-2">Phone</span>
-                                </div>
-                                <p className="text-white font-medium ml-7">+1 (555) 123-4567</p>
+                                <p className="text-white font-medium ml-7">{session?.user?.email || 'Not provided'}</p>
                             </div>
 
                             <div className="bg-dark-primary rounded-lg p-4 border border-dark-border">

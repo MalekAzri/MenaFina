@@ -25,7 +25,7 @@ const handler = NextAuth({
                 // Return user object for NextAuth
                 return {
                     id: user.id,
-                    name: user.firstName, // Use firstName as the display name
+                    name: `${user.firstName} ${user.lastName}`, // Use full name as the display name
                     email: user.email,
                     image: "/profile-picture.png", // Use local profile picture
                     role: user.role,
