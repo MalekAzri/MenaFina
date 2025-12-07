@@ -47,9 +47,9 @@ export default function Header() {
                                 </button>
                                 <div className="flex items-center space-x-3 pl-4 border-l border-gray-700">
                                     <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-600">
-                                        <img 
-                                            src="/profile-picture.png" 
-                                            alt="User" 
+                                        <img
+                                            src={session?.user?.image || "/student-profile-picture.png"}
+                                            alt="User"
                                             className="w-full h-full object-cover"
                                             key="profile-pic"
                                         />

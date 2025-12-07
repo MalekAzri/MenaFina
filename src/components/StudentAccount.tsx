@@ -240,7 +240,7 @@ export default function StudentAccount() {
                                 {session?.user?.image ? (
                                     <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
-                                    <img src="/profile-picture.png" alt="Profile" className="w-full h-full object-cover" />
+                                    <img src="/student-profile-picture.png" alt="Profile" className="w-full h-full object-cover" />
                                 )}
                             </div>
                             <h2 className="text-2xl font-bold text-white mb-1">{session?.user?.name || 'Student'}</h2>
