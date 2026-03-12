@@ -28,31 +28,26 @@
 ### 1) `main` Branch
 - Currently contains: README & technical report  
 - Purpose: Later used to integrate ML and RL models with the frontend (AI Chatbot & Simulator), add backend, and finalize the project.
-
 ### 2) `Service Bot` Branch
-```
-Optimizer/           # HRP Portfolio Optimizer
-Optimizer_RL/        # Reinforcement Learning version (Stable-baselines3)
-Profiling/           # Investor profile classification
-data/                # Historical datasets
-models/              # ML models
-chat_botFINA.py      # Main Chatbot script
-```
+
+    Optimizer/           # HRP Portfolio Optimizer
+    Optimizer_RL/        # Reinforcement Learning version (Stable-baselines3)
+    Profiling/           # Investor profile classification
+    data/                # Historical datasets
+    models/              # ML models
+    chat_botFINA.py      # Main Chatbot script
 
 ### 3) `Frontend` Branch
-```
-src/                 # React/Next.js pages & components
-public/              # Static assets
-package.json         # Project dependencies
-```
+
+    src/                 # React/Next.js pages & components
+    public/              # Static assets
+    package.json         # Project dependencies
 
 ### 4) `Simulator` Branch
-```
-data/                # Raw financial datasets
-predict.py           # Investment simulation ("Invest / No Invest")
-model.ipynb          # RandomForest training notebook used by predict.py
-```
 
+    data/                # Raw financial datasets
+    predict.py           # Investment simulation ("Invest / No Invest")
+    model.ipynb          # RandomForest training notebook used by predict.py
 ---
 
 ## Features
