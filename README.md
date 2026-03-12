@@ -12,7 +12,7 @@
 
 ---
 
-## 🧱 Repository Structure
+##  Repository Structure
 
 | Repository | Description | Stack | Main Contents |
 |------------|-------------|-------|---------------|
@@ -26,7 +26,7 @@
 
 ---
 
-## 📂 Folder Overview
+##  Folder Overview
 
 ### 1) `main` Branch
 - Currently contains: README & technical report  
@@ -64,7 +64,7 @@ model.ipynb          # RandomForest training notebook used by predict.py
 
 ---
 
-## 🚀 Features
+##  Features
 - Investor profiling via questionnaire  
 - Portfolio recommendation using HRP on 52 tickers  
 - Dynamic optimization with Reinforcement Learning  
@@ -73,7 +73,7 @@ model.ipynb          # RandomForest training notebook used by predict.py
 
 ---
 
-## 🏁 Installation
+##  Installation
 
 **Backend (Chatbot + Portfolio Optimizer)**  
 ```bash
@@ -103,7 +103,7 @@ python predict.py
 
 ---
 
-## 🔄 Roadmap
+##  Roadmap
 
 * Connect Chatbot ↔ Frontend via FastAPI
 * Migrate `users.json` → NestJS / Supabase (PL/SQL)
